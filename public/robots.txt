@@ -1,0 +1,7 @@
+User-agent: * 
+Disallow: /fuentes/ 
+Disallow: /images/ 
+Disallow: /javascripts/ 
+Disallow: /open-iconic-master/ 
+Disallow: /stylesheets/ 
+Crawl-delay: 60
