@@ -1,0 +1,373 @@
+//- Vista: /views/usuarios/item.pug
+    Autor: Pablo Coronel
+    Fecha: 23.05.2018
+    Tipo: Vista del item
+
+extends ../templates/admin_layout.pug
+
+block content 
+  div(style="padding-top:20px;padding-button:20px;")
+  div.container-fluid
+      div.row
+        div.col-md-3
+          h6 Menú
+          ul.list-group
+           if sesion.privilegio>=1
+           if sesion.privilegio>=2
+           if sesion.privilegio>=3
+           if sesion.privilegio>=4
+              button(type="button").list-group-item.list-group-item-action#cerrar
+                span.oi.oi-arrow-left
+                span.title-cerrar  Cerrar
+
+              button(type="button").list-group-item.list-group-item-action#enviardatos
+                span.oi.oi-envelope-closed
+                span.title-enviardatos  Enviar datos de acceso
+              if item.estado==1
+                button(type="button").list-group-item.list-group-item-action#activar
+                  span.oi.oi-ban
+                  span.title-activar  Desactivar
+              else
+                button(type="button").list-group-item.list-group-item-action#activar
+                  span.oi.oi-check
+                  span.title-activar  Activar
+
+              button(type="button").list-group-item.list-group-item-action.list-group-item-danger#eliminar
+                span.oi.oi-check
+                span.title-activar  Eliminar Cuenta
+
+
+           if sesion.privilegio>=5
+      
+        div.col-md-9
+          p(align="right", style="font-size:14px;") Fecha de alta de registro: 
+            br
+            b #{item.creado}
+          h5 Edición del usuario #{item._id}
+            
+
+          hr
+          
+          form#formulario
+            .input-group.input-group-sm.mb-3
+              .input-group-prepend
+                .input-group-text#inputGroup-sizing-sm Usuario
+              input.form-control(type="text",aria-label="Small", aria-describedby="inputGroup-sizing-sm", disabled="true", value=item.usuario)
+
+            .input-group.input-group-sm.mb-3
+              .input-group-prepend
+                .input-group-text#inputGroup-sizing-sm Email
+              input.form-control(type="text",aria-label="Small", aria-describedby="inputGroup-sizing-sm", disabled="true", value=item.email)
+
+            .input-group.input-group-sm.mb-3
+              .input-group-prepend
+                .input-group-text#inputGroup-sizing-sm Apellido
+              input.form-control(type="text",aria-label="Small", aria-describedby="inputGroup-sizing-sm", value=item.apellido)#apellido
+
+            .input-group.input-group-sm.mb-3
+              .input-group-prepend
+                .input-group-text#inputGroup-sizing-sm Nombre
+              input.form-control(type="text",aria-label="Small", aria-describedby="inputGroup-sizing-sm", value=item.nombre)#nombre
+
+            .input-group.input-group-sm.mb-3
+              .input-group-prepend
+                .input-group-text#inputGroup-sizing-sm Telefono
+              input.form-control(type="text",aria-label="Small", aria-describedby="inputGroup-sizing-sm", value=item.telefono)#telefono
+
+            .input-group.input-group-sm.mb-3
+              .input-group-prepend
+                .input-group-text#inputGroup-sizing-sm Estado
+              if item.estado==1
+                input.form-control(type="text",aria-label="Small", aria-describedby="inputGroup-sizing-sm", value="Activado", disabled="true")#estado
+              else
+                input.form-control(type="text",aria-label="Small", aria-describedby="inputGroup-sizing-sm", value="Desactivado", disabled="true")#estado
+            .dropdown
+              a.btn.btn-secondary.dropdown-toggle.privilegio(href="#", role="button", id="privilegio", data-toggle="dropdown",aria-haspopup="true",aria-expanded="false")=userPriv
+              div.dropdown-menu( aria-labelledby="privilegio")
+                each privs in privilegios
+                  if privs.alias
+                    a.dropdown-item.rango(href="#",rango=privs.rango, title=privs.descripcion)= privs.alias
+                  else
+                    a.dropdown-item.rango(href="#",rango=privs.rango, title=privs.descripcion)= privs.nombre
+
+            
+ 
+            hr
+            button(id="#enviar").btn.btn-success.btn-block Aplicar
+            hr
+
+
+  .modal.fade( tabindex="-1", role="dialog")#eliminaritem
+    .modal-dialog(role="document")
+      .modal-content
+        .modal-header
+          h5.modal-title Eliminar Cuenta
+          button.close(type="button", data-dismiss="modal", aria-label="Close")
+            span(aria-hidden="true") &times;
+        .modal-body
+          p Está a punto de eliminar esta cuenta.
+          p Esta acción no se puede deshacer!
+
+
+        .modal-footer
+           .col-md-12
+              button.btn.btn-danger.btn-block(type="submit")#eliminarusuario Eliminar
+
+
+  script.
+    
+    var SAVE = {};
+
+    $(document).ready(function()
+    {
+
+        $('#formulario').submit(function(e){e.preventDefault() && e.preventDefault;
+          $(this).attr("disabled",true);
+          $('#enviar').html(LOADINGHTMLBTNoscuro).attr("disabled",true);
+
+
+            guardarItem('#{item._id}');
+
+        return false;});
+
+       $('#activar, #desactivar').click(function(e){e.preventDefault() && e.preventDefault;
+          $(this).attr("disabled",true);
+          $('.title-activar').html(LOADINGHTMLBTNoscuro).attr("disabled",true);
+
+            activar('#{item._id}');
+
+        return false;});
+
+       $('#cerrar').click(function(e){e.preventDefault() && e.preventDefault;
+          $(this).attr("disabled",true);
+          $('.title-cerrar').html(LOADINGHTMLBTNoscuro).attr("disabled",true);
+
+            window.location="/usuarios";
+
+        return false;});
+
+       $('#enviardatos').click(function(e){e.preventDefault() && e.preventDefault;
+          $(this).attr("disabled",true);
+          $('.title-enviardatos').html(LOADINGHTMLBTNoscuro);
+
+           enviarDatos('#{item._id}');
+
+        return false;});
+
+       $('#eliminar').click(function(e){e.preventDefault() && e.preventDefault;
+
+          $('#eliminaritem').modal('show');
+
+        return false;});
+
+       $('#eliminarusuario').click(function(e){e.preventDefault() && e.preventDefault;
+
+          $('#eliminarusuario').html(LOADINGHTMLBTN);
+
+          eliminarItem('#{item._id}');
+
+        return false;});
+
+       $('.rango').click(function(e){e.preventDefault() && e.preventDefault;
+          
+        var rango = $(this).attr("rango");
+        var nombre = $(this).html();
+          console.log(rango);
+          console.log(nombre);
+
+          $('.privilegio').html(LOADINGHTMLBTNoscuro);
+
+           actualizarRango('#{item._id}',rango,nombre);
+
+        return false;});
+
+        
+
+    });
+
+
+      function actualizarRango(idItem,r,n){
+         
+         var data = {};
+          data.privilegio = r;
+
+
+          $.ajax({
+          dataType: "json",method: "POST",url:  '/usuarios/jsactualizarrango', data: {hash:'#{data.hash}',id:idItem,datos:data},
+          success:function(data)
+          {
+
+                if(data.estado)
+                  {
+
+                       mensaje(data.mensaje,"success");
+
+                  }else
+                  {
+
+                    mensaje(data.mensaje,"warning");
+
+                  }
+                  $('.privilegio').html(n);
+
+          },
+          fail:function(jqXHR, textStatus, errorThrown){
+
+             console.log(errorThrown);
+          }
+
+
+        });
+      } 
+
+
+      function guardarItem(idItem){
+         
+         var data = {};
+          data.nombre = $('#nombre').val();
+          data.apellido = $('#apellido').val();
+          data.telefono = $('#telefono').val();
+
+
+          $.ajax({
+          dataType: "json",method: "POST",url:  '/usuarios/jsguargarregirstro', data: {hash:'#{data.hash}',id:idItem,datos:data},
+          success:function(data)
+          {
+
+                if(data.estado)
+                  {
+
+                       mensaje(data.mensaje,"success");
+
+                  }else
+                  {
+
+                    mensaje(data.mensaje,"warning");
+
+                  }
+                  $('#enviar').html("Guardar").removeAttr("disabled");
+
+             // return data.estado;
+          },
+          fail:function(jqXHR, textStatus, errorThrown){
+
+             console.log(errorThrown);
+          }
+
+
+        });
+      }    
+
+
+      function eliminarItem(idItem){
+         
+        $.ajax({
+          dataType: "json",method: "POST",url:  '/usuarios/jseliminarregirstro', data: {hash:'#{data.hash}',id:idItem},
+          success:function(data)
+          {
+                if(data.estado)
+                  {
+                    mensaje(data.mensaje,"success");
+                    setTimeout(function(){
+
+                      window.location = "/usuarios";
+                    },3000);
+
+
+                  }else
+                  {
+                    mensaje(data.mensaje,"warning");
+                  }
+          },
+          fail:function(jqXHR, textStatus, errorThrown){
+
+             console.log(errorThrown);
+          }
+
+        });
+      }    
+
+
+      function enviarDatos(idItem){
+         
+         var data = {};
+
+
+          $.ajax({
+          dataType: "json",method: "POST",url:  '/usuarios/jsenviardatos', data: {hash:'#{data.hash}',id:idItem,datos:data},
+          success:function(data)
+          {
+
+                if(data.estado)
+                  {
+
+                       mensaje(data.mensaje,"success");
+
+                  }else
+                  {
+
+                    mensaje(data.mensaje,"warning");
+
+                  }
+                  $('.title-enviardatos').html(" Enviar datos de acceso");
+                  $("#enviardatos").removeAttr("disabled");
+
+          },
+          fail:function(jqXHR, textStatus, errorThrown){
+
+             console.log(errorThrown);
+          }
+
+
+        });
+      }    
+      function activar(idItem){
+         
+         var data = {};
+
+
+          $.ajax({
+          dataType: "json",method: "POST",url:  '/usuarios/jsactivarregirstro', data: {hash:'#{data.hash}',id:idItem,datos:data},
+          success:function(data)
+          {
+              var title=$('.title-activar').html();
+              if(title == " Activar")
+              {
+                $('.title-activar').html(" Desactivar");
+              }else{
+                $('.title-activar').html(" Activar");
+
+              }
+               $("#activar").removeAttr("disabled");
+
+                if(data.estado)
+                  {
+                      if(data.std==0)
+                      {
+                        $('#estado').val('Desactivado');
+                      }else
+                      {
+                      
+                        $('#estado').val('Activado');
+                      }
+
+
+                       mensaje(data.mensaje,"success");
+
+                  }else
+                  {
+
+                    mensaje(data.mensaje,"warning");
+
+                  }
+
+             // return data.estado;
+          },
+          fail:function(jqXHR, textStatus, errorThrown){
+
+             console.log(errorThrown);
+          }
+
+
+        });
+      }    

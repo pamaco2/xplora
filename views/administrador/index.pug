@@ -1,0 +1,48 @@
+//- Vista: /views/administrador/index.pug
+    Autor: Pablo Coronel
+    Fecha: 26.02.2018
+    Tipo: Puerta de entrada administrador
+    Seguridad: 
+    Propósito: 
+    Metodo de restuesta: /
+
+extends ../templates/admin_layout.pug
+
+block content 
+  div(style="padding-top:20px;padding-button:20px;")
+  div.container-fluid
+      div.row
+        div.col-md-3
+          h4 Menú
+          ul.list-group
+           if sesion.privilegio>=1
+              a.list-group-item.list-group-item-action.disabled(href="#")
+                span.oi.oi-people 
+                span  +1
+
+           if sesion.privilegio>=2
+              a.list-group-item.list-group-item-action.disabled(href="#")
+                span.oi.oi-people 
+                span  Articulos
+           if sesion.privilegio>=3
+              a.list-group-item.list-group-item-action.disabled(href="#")
+                span.oi.oi-people 
+                span  +3
+              a.list-group-item.list-group-item-action.disabled(href="/registros")
+                span.oi.oi-people 
+                span  Registros
+           if sesion.privilegio>=4
+              a.list-group-item.list-group-item-action(href="/productos")
+                span.oi.oi-folder 
+                span  Productos
+              a.list-group-item.list-group-item-action(href="/usuarios")
+                span.oi.oi-people 
+                span  Usuarios
+           if sesion.privilegio>=5
+              a.list-group-item.list-group-item-action.disabled(href="#")
+                span.oi.oi-people 
+                span  +5
+      
+        div.col-md-9
+          div(style="min-height:500px;")
+            h4 Administrador

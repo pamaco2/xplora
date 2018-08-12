@@ -1,0 +1,349 @@
+//- Vista: /views/web/signup_completo.pug
+    Autor: Pablo Coronel
+    Fecha: 11.02.2018
+    Tipo: Formulario Ascincrono
+    Seguridad: Recaptcha Invisible 
+    Propósito: dar registro de usuario al sistema Xplora.
+    Metodo de restuesta: /signup [POST]
+
+extends ../../templates/layout_b.pug
+
+block content  
+  div.container-fluid
+    div(style="margin-top:5%;margin-bottom:5%;")
+      .container
+        .row(style="min-height:500px;").align-items-center
+          .col-md-10.offset-md-1
+            h3 Registrar nuevo usuario
+            p
+              small * Campos requeridos
+            form#form(action="/signup", method="post")
+              div.form-group
+                label 
+                  strong * Usuario:
+                input(type="email",name="usuario",required="true", placeholder="Ej.:miemail@gmail.com").form-control#usuario
+              div.row
+                div.col-md-6
+                  div.form-group
+                    label
+                      strong * Nombre:
+                    input(type="text",name="nombre",required="true").form-control#nombre
+                div.col-md-6
+                  div.form-group
+                    label 
+                      strong * Apellido:
+                    input(type="text",name="apellido",required="true").form-control#apellido
+                div.col-md-6
+                  div.form-group
+                    label 
+                      strong * Teléfono:
+                    input(type="text",name="telefono",required="true").form-control#telefono
+              hr
+              #accordion
+                .card
+                  #headingOne.card-header
+                    h5.mb-0
+                      a.btn.btn-link(data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne")
+                        | Datos de facturación 
+                       
+                  #collapseOne.collapse.show(aria-labelledby="headingOne" data-parent="#accordion")
+                    .card-body
+                      
+
+                       div.row
+                          div.col-md-6 
+                            div.form-group
+                              label 
+                                strong * RAZON SOCIAL:
+                              input(type="text",name="frazon", required="true", placeholder="La argentina S.A.").form-control#frazon
+                          div.col-md-6 
+                            div.form-group
+                              label 
+                               strong * CUIT:
+                              input(type="text",name="fcuit", required="true", placeholder="00000000000").form-control#fcuit
+                       
+
+                          div.col-md-6
+                            div.form-group
+                              label Dirección:
+                              input(type="text",name="fdireccion", placeholder="Dorrego 1525 5to B").form-control#fdireccion
+                         
+                          div.col-md-4
+                            div.form-group
+                              label Localidad:
+                              input(type="text",name="flocalidad", placeholder="Ciudad o pueblo").form-control#flocalidad
+                          
+                          div.col-md-2
+                            div.form-group
+                              label Código Postal:
+                              input(type="text",name="fcpostal", placeholder="2000").form-control#fcpostal
+
+                          div.col-md-6
+                            div.form-group
+                              label Pais:
+                              select.form-control#fpais
+
+                          div.col-md-6
+                            div.form-group
+                              label Provincia:
+                              select.form-control#fprovincia
+ 
+
+                .card
+                  #headingTwo.card-header
+                    h5.mb-0
+                      a.btn.btn-link.collapsed(data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo")
+                        | Datos de envío
+                    span(style="text-align:right;")
+                        input(type="checkbox", name="", id="checkdatosenvio", style="padding:0px;")
+                        span(style="margin-left:5px;")
+                          small 
+                            | Los datos de envio son los mismos que los de facturación
+                  #collapseTwo.collapse(aria-labelledby="headingTwo" data-parent="#accordion")
+                    .card-body
+
+                       div.row
+
+                          div.col-md-6
+                            div.form-group
+                              label Dirección:
+                              input(type="text",name="edireccion", placeholder="Dorrego 1525 5to B").form-control#edireccion
+                         
+                          div.col-md-4
+                            div.form-group
+                              label Localidad:
+                              input(type="text",name="elocalidad").form-control#elocalidad
+                          div.col-md-2
+                            div.form-group
+                              label Código Postal:
+                              input(type="text",name="ecpostal").form-control#ecpostal
+                          
+                          div.col-md-6
+                            div.form-group
+                              label Pais:
+                              select.form-control#epais
+
+                          div.col-md-6
+                            div.form-group
+                              label Provincia:
+                              select.form-control#eprovincia
+                          div.col-md-6
+                            div.form-group
+ 
+ 
+                  
+              div(style="margin-top:20px;")
+                div.form-group
+                  button#enviar(type="submit", nombre="Registrar").btn.btn-info Registrar
+                div.form-group
+                  a(href="/")
+                    span.oi.oi-arrow-circle-left 
+                    span(style="margin-left:5px;") Inicio
+ 
+    script.
+      // ---------------------------- Declaración de variables --------------------------------------------------------
+      var IDgRecaptchaIResponse = "#g-recaptcha-response"; // ID nodo que contiene response grecaptcha.
+      var gRecaptchaIResponse = null; // KEY response grecaptcha.
+      var gRecaptchaIExec = false;  // Bandera de ejecución de recaptcha.
+      var esperaToken = null;  // bucle monitor de KEY recibida.
+      var action = null; // script action del formulario.
+      var enviar = null;  // boton submit del formulario..
+      // var data = {}; // datos que seran pasado a la solicitud.
+      // ---------------------------- Declaración de variables --------------------------------------------------------
+
+
+      // ---------------------------- Definición de eventos --------------------------------------------------------
+      $(document).ready(function(){
+
+                        
+          $("#checkdatosenvio").change(function(){ 
+
+            if( $(this).is(':checked') )
+            {
+              var valor = $(this).val();
+              console.log("checked");
+              rellenarEnvio();
+            
+            }else{
+              console.log("No checked");
+              desrellenarEnvio();
+            }
+
+           }); 
+
+
+
+
+            function rellenarEnvio()
+            {
+
+                $('#edireccion').val($('#fdireccion').val());
+                $('#ecpostal').val($('#fcpostal').val());
+                $('#elocalidad').val($('#flocalidad').val());
+                $('#eprovincia').val($('#fprovincia').val());
+                $('#epais').val($('#fpais').val());
+
+            }
+            function desrellenarEnvio()
+            {
+                $('#edireccion').val("");
+                $('#ecpostal').val("");
+                $('#elocalidad').val("");
+                $('#eprovincia').val("");
+                $('#epais').val("");
+            }
+
+
+            $("#epais").load("/getpaises",{hash:'#{data.hash}'},function(responseTxt, statusTxt, xhr)
+            {
+                console.log($("#epais").val());
+                var pais = $("#epais").val();
+                $("#eprovincia").load("/getprovincias",{hash:'#{data.hash}', codepais:pais },function(responseTxt, statusTxt, xhr)
+                {});
+            });
+
+            $("#epais").change(function()
+            {
+                var pais = $("#epais").val();
+                console.log(pais);
+                $("#eprovincia").load("/getprovincias",{hash:'#{data.hash}', codepais:pais },function(responseTxt, statusTxt, xhr){});
+
+            });
+
+            $("#fpais").load("/getpaises",{hash:'#{data.hash}'},function(responseTxt, statusTxt, xhr)
+            {
+                console.log($("#fpais").val());
+                var pais = $("#fpais").val();
+                $("#fprovincia").load("/getprovincias",{hash:'#{data.hash}', codepais:pais },function(responseTxt, statusTxt, xhr)
+                {});
+            });
+
+            $("#fpais").change(function()
+            {
+                var pais = $("#fpais").val();
+                console.log(pais);
+                $("#fprovincia").load("/getprovincias",{hash:'#{data.hash}', codepais:pais },function(responseTxt, statusTxt, xhr){});
+
+            });
+
+        action = $("#form").attr("action"); // script action del formulario.
+        enviar = $("#form").find("button:submit").first();  // boton submit del formulario..
+
+        $('#form').submit(function(e){e.preventDefault() && e.preventDefault;
+
+            if($(IDgRecaptchaIResponse).val()!="")
+             {
+                enviarForm(); // realizar solicitud
+             }else
+             {
+
+                if(!gRecaptchaIExec)
+                {
+                   gRecaptchaIExec = true;
+                   iniciarEspera();
+                   grecaptcha.execute();
+                }else
+                {
+                   grecaptcha.execute();
+                }
+             }                
+
+        return false; });
+
+      });// .ready()
+      // ---------------------------- Definición de eventos --------------------------------------------------------
+
+      // ---------------------------- Funciones especiales --------------------------------------------------------
+
+
+      var gData = function()
+      {
+        var data={};
+        data.captcha = gRecaptchaIResponse;
+        data.nombre = $("#nombre").val();
+        data.apellido = $("#apellido").val();
+        data.usuario = $("#usuario").val();
+        data.telefono = $("#telefono").val();
+        data.envio = {
+            direccion:$("#edireccion").val(),
+            cpostal:$("#ecpostal").val(),
+            localidad:$("#elocalidad").val(),
+            provincia:$("#eprovincia").val(),
+            pais:$("#epais").val()
+        };
+
+        data.facturacion = {
+            razon:$("#frazon").val(),
+            cuit:$("#fcuit").val(),
+            direccion:$("#fdireccion").val(),
+            cpostal:$("#fcpostal").val(),
+            localidad:$("#flocalidad").val(),
+            provincia:$("#fprovincia").val(),
+            pais:$("#fpais").val()
+        };
+
+
+        return data;
+      }
+      var resetRecapt = function()
+      {
+         gRecaptchaIResponse = "";grecaptcha.reset(); $(IDgRecaptchaIResponse).val("");gRecaptchaIExec=false;
+      }
+
+      var stopEspera = function(){gRecaptchaIResponse = null;clearInterval(esperaToken); /* Fin de la espera de la respuesta de recaptcha*/ }
+
+      var iniciarEspera= function(){
+              esperaToken = setInterval(function()
+                  { // Esperando la respuesta de recaptcha
+
+                    if($(IDgRecaptchaIResponse).val()!="")
+                    {
+                      clearInterval(esperaToken); // Fin a la espera de la respuesta de recaptcha
+                      gRecaptchaIResponse = $(IDgRecaptchaIResponse).val();
+
+                      enviarForm(); // realizar solicitud
+                    }
+                  },100);
+          }
+
+      function enviarForm(data){
+         
+         $(enviar).html(LOADINGHTMLBTN).attr("disabled",true);
+
+         $.ajax({
+          dataType: "json",method: "POST",url:  action, data: {hash:'#{data.hash}',datos:gData()},
+          success:function(data)
+          {
+
+                if(data.estado)
+                  {
+
+                   $(enviar).html( $(enviar).attr( "nombre" ) );
+                   mensaje(data.mensaje,"success", true);
+                   resetRecapt()
+
+                   //setTimeout(function(){ window.location="/"; },2000);
+
+                  }else
+                  {
+
+                   $(enviar).html( $(enviar).attr( "nombre" ) ).removeAttr("disabled");
+                   mensaje(data.mensaje,"warning");
+                   resetRecapt();
+
+                  }
+
+             // return data.estado;
+          },
+          fail:function(jqXHR, textStatus, errorThrown){
+
+             $(enviar).html( $(enviar).attr( "nombre" ) ).removeAttr("disabled");
+
+             mensaje(textStatus,"danger");
+             resetRecapt();
+          }
+
+
+        });
+      }
+      // ---------------------------- Funciones especiales -------------------------------------------------------

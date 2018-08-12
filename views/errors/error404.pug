@@ -1,0 +1,20 @@
+//- Vista: /views/errors/error404.pug
+    Autor: Pablo Coronel
+    Fecha: 11.02.2018
+    Tipo: Vista de error 404
+    Seguridad: N/A 
+    Propósito: N/A 
+    Metodo de restuesta: N/A 
+
+extends ../errors/layout.pug
+
+block content
+  .row.align-items-center
+    .col-md-4.offset-md-4(style="text-align:center;")
+      h1
+        span.oi.oi-signpost
+      h3 Error 404
+      p No hemos encontrado lo que busca
+      a(href="javascript: history.go(-1)")
+        span.oi.oi-arrow-left 
+        span  Volver

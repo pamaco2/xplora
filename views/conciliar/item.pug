@@ -1,0 +1,752 @@
+//- Vista: /views/usuarios/item.pug
+    Autor: Pablo Coronel
+    Fecha: 23.05.2018
+    Tipo: Vista del item
+
+extends ../templates/layout.pug
+
+block content 
+  div.container.conciliar
+    div(style="padding:5px;")
+      .row
+        .col-4
+          if privilegio>=2
+            a.btn.btn-lg.btn-secondary(href="/conciliar", title="Volver") 
+              span.oi.oi-arrow-thick-left
+ 
+          if privilegio>=3
+          
+
+        .col-8
+          h5(style="text-align:right;") 
+            span #{item.nombre} #{item.apellido}
+            br
+            span(style="font-size:15px;")= alta
+
+
+
+    ul.nav.nav-tabs#nav-tab(role="tablist")
+      li.nav-item
+        a.nav-link.active(data-toggle="tab", role="tab", aria-selected="true", aria-controls="principal", href="#principal")#principal-tab Principal
+      li.nav-item
+        a.nav-link(data-toggle="tab", role="tab", aria-selected="true", aria-controls="flia", href="#flia")#flia-tab Entorno
+      li.nav-item
+        a.nav-link(data-toggle="tab", role="tab", aria-selected="true", aria-controls="diagnostico", href="#diagnostico")#diagnostico-tab Motivo/Diag.
+    
+    .tab-content#myTabContent
+        div(style="margin-top:5px;")
+        .tab-pane.fade.show.active(role="tabpanel", aria-labelledby="principal-tab")#principal
+            div(style="text-align:right;")
+              button.btn.btn-sm.btn-default(type="button",data-toggle="modal", data-target="#ModalLabelDatosprincipales")
+                span.oi.oi-pencil
+            .row
+                .col-md-6
+                    div
+                        p
+                          strong Edad:
+                          span  #{edad} años
+                          br
+                          strong Nacido el: 
+                          span  #{nacimiento}
+                          br
+                          strong Estado civil: 
+                          span  #{item.estado_civil}
+
+                .col-md-6
+                    div
+                        p
+                          strong Teléfono: 
+                          span  #{item.telefono} 
+                          br
+                          strong Email: 
+                          span  #{item.email} 
+                          br
+                          strong Dirección: 
+                          span  #{item.direccion}
+
+
+        .tab-pane.fade(role="tabpanel", aria-labelledby="flia-tab")#flia
+            div(style="text-align:right;")
+              button.btn.btn-sm.btn-default(type="button",data-toggle="modal", data-target="#ModalLabelEntorno")
+                span.oi.oi-pencil
+            .row
+                .col-md-6
+                    div
+                        p(style="text-align:center;margin:0;border-bottom:1px dotted #EEE;")
+                          strong Grupo Fliar.:
+                        p
+                          strong Tipo: 
+                          span  #{item.ambito.ftipo}
+                          br
+                          strong Conyuge: 
+                          span  #{item.ambito.conyuge} - 
+                          strong Hijos: 
+                          span  #{item.ambito.hijos}
+                          br
+                          strong Madre: 
+                          span  #{item.ambito.madre} - 
+                          strong Padre: 
+                          span  #{item.ambito.padre} - 
+                          strong Hermanos: 
+                          span  #{item.ambito.hermanos}
+      
+                .col-md-6
+                    div
+                        p(style="text-align:center;margin:0;border-bottom:1px dotted #EEE;")
+                          strong Otros datos:
+                        p
+                          strong Iglesia: 
+                          span  #{item.ambito.iglesia}
+                          br
+                          strong Racimo: 
+                          span  #{item.ambito.racimo}
+                          br
+                          strong Contacto: 
+                          span  #{item.contacto}
+                          br
+
+        .tab-pane.fade(role="tabpanel", aria-labelledby="diagnostico-tab")#diagnostico
+            div(style="text-align:right;")
+              button.btn.btn-sm.btn-default(type="button",data-toggle="modal", data-target="#ModalLabelDiagnostico")
+                span.oi.oi-pencil
+            .row
+                .col-md-8
+                  label Motivo:
+                  textarea.form-control(disabled="true") #{item.motivo}
+
+                  label Diagnostico: 
+                  textarea.form-control(style="min-height:200px;",disabled="true") #{item.diagnostico}
+                 
+
+                .col-md-4
+                  label Concepto de sí mismo: 
+                  textarea.form-control(disabled="true") #{item.concepto}
+                  label Mandatos: 
+                  textarea.form-control(style="",disabled="true") #{item.mandatos}
+                  label Temas a tratar:
+                  div
+                    ul
+                      each tmss in item.temas
+                        each idem in atrar
+                          if tmss == idem.alias
+                            li=idem.nombre
+
+
+ 
+
+
+
+
+    hr
+
+    div(style="text-align:right;")
+      if(privilegio>2)
+        button.btn.btn-sm.btn-default(type="button",data-toggle="modal", data-target="#ModalLabelEntrevista") Nueva Entrevista
+
+    hr
+    div.container
+      div(style="text-align:right;")
+
+        if(privilegio>1)
+          each entr in visitas
+            div
+              p(style="text-align:left;font-family:monospace;")
+                  span
+                  if(privilegio>4 || entr.autor==usuario.idusuario)
+                    button.btn.btn-sm.btn-default.editar(type="button",data-toggle="modal", data-target="#ModalLabelEntrevista", data-rel=entr.id) 
+                      span.oi.oi-pencil
+                  span
+                      strong Fecha de la visita: 
+                  span
+                      small=entr.fecha
+
+
+              div(style="text-align:justify;")=entr.comentario
+              p(style="text-align:right;font-family:monospace;")
+                  span
+                      strong Contiliadores: 
+                  span
+                      small=entr.conciliador
+                  br
+                  span
+                      strong Próxima visita: 
+                  span
+                      if entr.proximo
+                        small=entr.proximo
+            hr
+
+
+  .modal.fade#ModalLabelDatosprincipales(tabindex="-1", role="dialog", aria-labelledby="ModalLabelDatosprincipales", aria-hidden="true")
+    .modal-dialog(role="document")
+      .modal-content
+        form#form-modprincipal(method="post",action="#")
+          .modal-header
+            h5.modal-title(id="exampleModalLabel") Modificar datos pricipales
+            button.close(type="button", data-dismiss="modal", aria-label="Close")
+              span(aria-hidden="true") &times;
+          .modal-body
+            .form-row
+
+              .form-group.col-md-12
+                .input-group.input-group-sm
+                  .input-group-prepend
+                    span.input-group-text Dirección
+                  input.form-control.form-control-sm(type="text",required="true",value=item.direccion)#direccion
+
+              .form-group.col-md-12
+                .input-group.input-group-sm
+                  .input-group-prepend
+                    span.input-group-text Email              
+                  input.form-control.form-control-sm(type="text",value=item.email)#email
+              .form-group.col-md-6
+                .input-group.input-group-sm
+                  .input-group-prepend
+                    span.input-group-text Teléfono
+                  input.form-control.form-control-sm(type="text",value=item.telefono)#telefono
+              .form-group.col-md-6
+                .input-group.input-group-sm
+                  .input-group-prepend
+                    span.input-group-text Fecha
+                  input.form-control.form-control-sm(type="text",value=nacimiento)#fecha_nac          
+
+              .form-group.col-md-6
+                .input-group.input-group-sm
+                  .input-group-prepend
+                    span.input-group-text Est. Civil
+                  select.form-control.form-control-sm()#estado_civil
+                    if(item.estado_civil=="Soltero")
+                      option(value="Soltero", selected="true") Soltero
+                    else
+                      option(value="Soltero") Soltero
+
+                    if(item.estado_civil=="Casado")
+                      option(value="Casado", selected="true") Casado
+                    else
+                      option(value="Casado") Casado
+
+                    if(item.estado_civil=="Viudo")
+                      option(value="Viudo", selected="true") Viudo
+                    else
+                      option(value="Viudo") Viudo
+
+                    if(item.estado_civil=="Divorciado")
+                      option(value="Divorciado", selected="true") Divorciado
+                    else
+                      option(value="Divorciado") Divorciado
+
+          .modal-footer
+            button.btn.btn-secondary(type="button", data-dismiss="modal") Cerrar
+            button.btn.btn-primary(type="submit")#modprincipal Actualizar
+
+
+
+  .modal.fade#ModalLabelEntorno(tabindex="-1", role="dialog", aria-labelledby="ModalLabelEntorno", aria-hidden="true")
+    .modal-dialog(role="document")
+      .modal-content
+        form#form-modentorno(method="post",action="#")
+          .modal-header
+            h5.modal-title(id="exampleModalLabel") Modificar datos de entorno
+            button.close(type="button", data-dismiss="modal", aria-label="Close")
+              span(aria-hidden="true") &times;
+          .modal-body
+            .form-row
+
+              .form-group.col-md-5
+                .input-group.input-group-sm
+                  .input-group-prepend
+                    span.input-group-text Flia. Tipo:
+                  input.form-control.form-control-sm(type="text",value=item.ambito.ftipo)#ftipo
+
+              .form-group.col-md-6
+                .input-group.input-group-sm
+                  .input-group-prepend
+                    span.input-group-text Conyuge              
+                  input.form-control.form-control-sm(type="text",value=item.ambito.conyuge)#conyuge
+              .form-group.col-md-6
+                .input-group.input-group-sm
+                  .input-group-prepend
+                    span.input-group-text Hijos
+                  input.form-control.form-control-sm(type="text",value=item.ambito.hijos)#hijos
+              .form-group.col-md-6
+                .input-group.input-group-sm
+                  .input-group-prepend
+                    span.input-group-text Madre
+                  input.form-control.form-control-sm(type="text",value=item.ambito.madre)#madre          
+              .form-group.col-md-6
+                .input-group.input-group-sm
+                  .input-group-prepend
+                    span.input-group-text Padre
+                  input.form-control.form-control-sm(type="text",value=item.ambito.padre)#padre
+              .form-group.col-md-6
+                .input-group.input-group-sm
+                  .input-group-prepend
+                    span.input-group-text Hermanos
+                  input.form-control.form-control-sm(type="text",value=item.ambito.hermanos)#hermanos
+
+              .form-group.col-md-6
+                .input-group.input-group-sm
+                  .input-group-prepend
+                    span.input-group-text Iglesia
+                  input.form-control.form-control-sm(type="text",value=item.ambito.iglesia)#iglesia
+              .form-group.col-md-6
+                .input-group.input-group-sm
+                  .input-group-prepend
+                    span.input-group-text Racimo
+                  input.form-control.form-control-sm(type="text",value=item.ambito.racimo)#racimo
+              .form-group.col-md-6
+                .input-group.input-group-sm
+                  .input-group-prepend
+                    span.input-group-text Contacto
+                  input.form-control.form-control-sm(type="text",value=item.contacto)#contacto
+
+          .modal-footer
+            button.btn.btn-secondary(type="button", data-dismiss="modal") Cerrar
+            button.btn.btn-primary(type="submit")#modentorno Actualizar
+
+
+  .modal.fade#ModalLabelDiagnostico(tabindex="-1", role="dialog", aria-labelledby="ModalLabelDiagnostico", aria-hidden="true")
+    .modal-dialog(role="document")
+      .modal-content
+        form#form-moddiagnostico(method="post",action="#")
+          .modal-header
+            h5.modal-title(id="exampleModalLabel") Modificar diagnóstico
+            button.close(type="button", data-dismiss="modal", aria-label="Close")
+              span(aria-hidden="true") &times;
+          .modal-body
+            .form-row
+
+              .form-group.col-md-12
+                .input-group.input-group-sm
+                  .input-group-prepend
+                    span.input-group-text Motivo:
+                  input.form-control.form-control-sm(type="text",value=item.motivo)#motivo
+
+              .form-group.col-md-12
+                .input-group.input-group-sm
+                  .input-group-prepend
+                    span.input-group-text Concepto
+                  input.form-control.form-control-sm(type="text",value=item.concepto)#concepto
+
+              .form-group.col-md-12
+                .input-group.input-group-sm
+                  .input-group-prepend
+                    span.input-group-text Mandatos
+                  input.form-control.form-control-sm(type="text",value=item.mandatos)#mandatos
+
+              hr
+              each it in atrar
+                .input-group.col-md-6
+                  label(style="font-size:12px;")
+                    if it.check 
+                      input(type="checkbox", value=it.alias, class="temas", checked="true") 
+                      span(style="margin:10px;")=it.nombre
+                    else
+                      input(type="checkbox", value=it.alias, class="temas") 
+                      span(style="margin:10px;")=it.nombre
+
+              .form-group.col-md-12
+                .input-group.input-group-sm
+                  .input-group-prepend
+                    span.input-group-text Diagnóstico              
+                  textarea.form-control.form-control-sm(type="text")#diagnostico_text=item.diagnostico
+
+
+
+          .modal-footer
+            button.btn.btn-secondary(type="button", data-dismiss="modal") Cerrar
+            button.btn.btn-primary(type="submit")#moddiagnostico Actualizar
+
+
+
+  .modal.fade#ModalLabelEntrevista(tabindex="-1", role="dialog", aria-labelledby="ModalLabelEntrevista", aria-hidden="true")
+    .modal-dialog(role="document")
+      .modal-content
+        form#form-modentrevista(method="post",action="#")
+          .modal-header
+            h5.modal-title(id="exampleModalLabel") Nueva entrevista
+            button.close(type="button", data-dismiss="modal", aria-label="Close")
+              span(aria-hidden="true") &times;
+          .modal-body
+            .form-row
+
+              .form-group.col-md-12
+                .input-group.input-group-sm
+                  .input-group-prepend
+                    span.input-group-text Comentario              
+                  textarea.form-control.form-control-sm(required="true")#comentario
+              .form-group.col-md-12
+                .input-group.input-group-sm
+                  .input-group-prepend
+                    span.input-group-text Conciliador/es              
+                  input.form-control.form-control-sm(type="text",required="true")#conciliador
+              .form-group.col-md-12
+                .input-group.input-group-sm
+                  .input-group-prepend
+                    span.input-group-text Próxima visita              
+                  input.form-control.form-control-sm(type="date")#proximo
+
+
+
+          .modal-footer
+            button.btn.btn-secondary(type="button", data-dismiss="modal") Cerrar
+            button.btn.btn-primary(type="submit")#modentrevista Crear
+
+
+  .modal.fade#ModalLabelEditEntrevista(tabindex="-1", role="dialog", aria-labelledby="ModalLabelEditEntrevista", aria-hidden="true")
+    .modal-dialog(role="document")
+      .modal-content
+        form#form-modeditentrevista(method="post",action="#")
+          .modal-header
+            h5.modal-title(id="exampleModalLabel") Nueva entrevista
+            button.close(type="button", data-dismiss="modal", aria-label="Close")
+              span(aria-hidden="true") &times;
+          .modal-body
+            .form-row
+
+              .form-group.col-md-12
+                .input-group.input-group-sm
+                  .input-group-prepend
+                    span.input-group-text Comentario              
+                  textarea.form-control.form-control-sm(required="true")#ecomentario
+              .form-group.col-md-12
+                .input-group.input-group-sm
+                  .input-group-prepend
+                    span.input-group-text Conciliador/es              
+                  input.form-control.form-control-sm(type="text",required="true")#econciliador
+              .form-group.col-md-12
+                .input-group.input-group-sm
+                  .input-group-prepend
+                    span.input-group-text Próxima visita              
+                  input.form-control.form-control-sm(type="date")#eproximo
+
+                  input.form-control.form-control-sm(type="hidden")#eidficha
+                  input.form-control.form-control-sm(type="hidden")#eidentrv
+
+          .modal-footer
+            button.btn.btn-secondary(type="button", data-dismiss="modal") Cerrar
+            if(privilegio>4 || entr.autor==usuario.idusuario)
+              button.btn.btn-primary(type="submit")#modeditentrevista Actualizar
+
+
+  //- 
+  //script(src=data.base_url+"/tinymce/tinymce.min.js")
+  script.
+
+
+    $(document).ready(function()
+    {
+        //tinymce.init({ selector:'#diagnostico_text' });
+
+
+        $(".editar").click(function(e){e.preventDefault() && e.preventDefault; 
+
+           $(this).html(LOADINGHTMLBTN).attr("disabled",true);
+        	var idEntr = $(this).attr("data-rel");
+        	recuperarVisita(idEntr,this);
+
+        return false;});
+
+        $("#form-modeditentrevista").submit(function(e){e.preventDefault() && e.preventDefault;
+
+           $("#modeditentrevista").html(LOADINGHTMLBTN).attr("disabled",true);
+
+            var idItem=$("#eidentrv").val();
+            var campos = {
+              comentario:$("#ecomentario").val(),
+              conciliador:$("#econciliador").val(),
+              proximo:$("#eproximo").val(),
+              ficha:$("#eidficha").val()
+
+            }
+
+            modeditentrevista(campos,idItem);
+ 
+        return false;});
+
+
+        $("#form-modprincipal").submit(function(e){e.preventDefault() && e.preventDefault;
+
+           $("#modprincipal").html(LOADINGHTMLBTN).attr("disabled",true);;
+
+            var campos = {
+              email:$("#email").val(),
+              direccion:$("#direccion").val(),
+              telefono:$("#telefono").val(),
+              fecha_nac:$("#fecha_nac").val(),
+              estado_civil:$("#estado_civil").val()
+
+            }
+
+
+            modprincipal(campos);
+ 
+        return false;});
+
+  
+
+          $("#form-modentorno").submit(function(e){e.preventDefault() && e.preventDefault;
+
+           $("#modentorno").html(LOADINGHTMLBTN).attr("disabled",true);;
+
+            var campos = {
+              ftipo:$("#ftipo").val(),
+              conyuge:$("#conyuge").val(),
+              hijos:$("#hijos").val(),
+              madre:$("#madre").val(),
+              padre:$("#padre").val(),
+              hermanos:$("#hermanos").val(),
+              iglesia:$("#iglesia").val(),
+              racimo:$("#racimo").val(),
+              contacto:$("#contacto").val()
+
+            }
+
+
+            modentorno(campos);
+ 
+        return false;});
+
+          $("#form-moddiagnostico").submit(function(e){e.preventDefault() && e.preventDefault;
+
+           $("#moddiagnostico").html(LOADINGHTMLBTN).attr("disabled",true);;
+
+
+            
+            var temasSelected =[];
+            $("input.temas:checkbox:checked").each(   
+                function() {
+                  temasSelected.push($(this).val());
+                   console.log("El checkbox con valor " + $(this).val() + " está seleccionado");
+                }
+            );
+
+            var campos = {
+              motivo:$("#motivo").val(),
+              concepto:$("#concepto").val(),
+              mandatos:$("#mandatos").val(),
+              temas:temasSelected,
+              diagnostico:$("#diagnostico_text").val()
+
+            }
+
+
+            moddiagnostico(campos);
+ 
+        return false;});
+            
+
+        $("#form-modentrevista").submit(function(e){e.preventDefault() && e.preventDefault;
+
+           $("#modentrevista").html(LOADINGHTMLBTN).attr("disabled",true);;
+
+
+            var campos = {
+              comentario:$("#comentario").val(),
+              conciliador:$("#conciliador").val(),
+              proximo:$("#proximo").val()
+            }
+
+            console.log(campos)
+            modentrevista(campos);
+ 
+        return false;});
+
+
+    });
+
+
+
+      function modeditentrevista(c,i){
+         
+         $.ajax({
+          dataType: "json",method: "POST",url:  '/conciliar/modeditentrevista', data: {hash:'#{data.hash}', id:i, datos:c},
+          success:function(data)
+          {
+
+              if(data.estado)
+              {
+
+                mensaje(data.mensaje,"success");
+                location.reload();
+
+              }else
+              {
+                mensaje(data.mensaje,"danger");
+
+
+              }
+              $("#modeditentrevista").html("Actualizar").removeAttr("disabled");;
+
+          },
+          fail:function(jqXHR, textStatus, errorThrown){
+
+             console.log(errorThrown);
+          }
+
+
+        });
+      }  
+
+      function recuperarVisita(id, t){
+       
+       
+         $.ajax({
+          dataType: "json",method: "POST",url:  '/conciliar/recuperarvisita', data: {hash:'#{data.hash}', id:id},
+          success:function(data)
+          {
+          	  console.log(data)
+              if(data.estado)
+              {
+              	$("#ecomentario").val(data.datos.comentario);
+              	$("#econciliador").val(data.datos.conciliador);
+              	$("#eproximo").val(data.datos.proximo);
+              	$("#eidficha").val(data.datos.ficha);
+              	$("#eidentrv").val(data.datos.id);
+
+              	$("#ModalLabelEditEntrevista").modal("show");
+                
+
+              }else
+              {
+                mensaje(data.mensaje,"danger");
+
+
+              }
+              $(t).html("<span class='oi oi-pencil'></span>").removeAttr("disabled");
+
+          },
+          fail:function(jqXHR, textStatus, errorThrown){
+
+             console.log(errorThrown);
+          }
+
+
+        });
+      }  
+
+      function modentrevista(c){
+         
+         $.ajax({
+          dataType: "json",method: "POST",url:  '/conciliar/modentrevista', data: {hash:'#{data.hash}', id:'#{item._id}', datos:c},
+          success:function(data)
+          {
+
+              if(data.estado)
+              {
+
+                mensaje(data.mensaje,"success");
+                location.reload();
+
+              }else
+              {
+                mensaje(data.mensaje,"danger");
+
+
+              }
+              $("#modprincipal").html("Actualizar").removeAttr("disabled");;
+
+          },
+          fail:function(jqXHR, textStatus, errorThrown){
+
+             console.log(errorThrown);
+          }
+
+
+        });
+      }  
+
+      function modprincipal(c){
+         
+         $.ajax({
+          dataType: "json",method: "POST",url:  '/conciliar/modprincipal', data: {hash:'#{data.hash}', id:'#{item._id}', datos:c},
+          success:function(data)
+          {
+
+              if(data.estado)
+              {
+
+                mensaje(data.mensaje,"success");
+                location.reload();
+
+              }else
+              {
+                mensaje(data.mensaje,"danger");
+
+
+              }
+              $("#modprincipal").html("Actualizar").removeAttr("disabled");;
+
+          },
+          fail:function(jqXHR, textStatus, errorThrown){
+
+             console.log(errorThrown);
+          }
+
+
+        });
+      }        
+
+      function modentorno(c){
+         console.log(c)
+         $.ajax({
+          dataType: "json",method: "POST",url:  '/conciliar/modentorno', data: {hash:'#{data.hash}', id:'#{item._id}', datos:c},
+          success:function(data)
+          {
+
+              console.log(data)
+              if(data.estado)
+              {
+
+                mensaje(data.mensaje,"success");
+                location.reload();
+
+              }else
+              {
+                mensaje(data.mensaje,"danger");
+
+
+              }
+              $("#modentorno").html("Actualizar").removeAttr("disabled");;
+
+          },
+          fail:function(jqXHR, textStatus, errorThrown){
+
+             console.log(errorThrown);
+          }
+
+
+        });
+      }        
+
+
+      function moddiagnostico(c){
+         console.log(c);
+         $.ajax({
+          dataType: "json",method: "POST",url:  '/conciliar/moddiagnostico', data: {hash:'#{data.hash}', id:'#{item._id}', datos:c},
+          success:function(data)
+          {
+
+              if(data.estado)
+              {
+
+                mensaje(data.mensaje,"success");
+                location.reload();
+
+              }else
+              {
+                mensaje(data.mensaje,"danger");
+
+
+              }
+              $("#moddiagnostico").html("Actualizar").removeAttr("disabled");;
+
+          },
+          fail:function(jqXHR, textStatus, errorThrown){
+
+             console.log(errorThrown);
+          }
+
+
+        });
+         
+      }              

@@ -1,0 +1,12 @@
+nav.navbar.navbar-expand-lg.navbar-dark.bg-dark
+  a.navbar-brand(href="/")
+    img(src="/images/logo.png", style="width:100px;")
+
+  button.navbar-toggler(type="button", data-toggle="collapse", data-target="#navbarNav", aria-controls="navbarNav", aria-expanded="false", aria-label="Toggle navigation")
+    span.navbar-toggler-icon
+  div.collapse.navbar-collapse#navbarNav
+    ul.navbar-nav.mr-auto
+     for item in registros
+      li.nav-item #{item.nombre}
+
+    ul.navbar-nav.my-2.my-lg-0#logueado

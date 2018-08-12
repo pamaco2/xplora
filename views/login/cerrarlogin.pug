@@ -1,0 +1,27 @@
+//- Vista: /views/web/cerrarlogin.pug
+    Autor: Pablo Coronel
+    Fecha: 11.02.2018
+    Tipo: Formulario Ascincrono(con sesión iniciada)
+    Seguridad: Recaptcha Invisible 
+    Propósito: dar acceso al sistema Xplora.
+    Metodo de restuesta: /jscerrarsesion
+
+
+extends ../templates/layout_b.pug
+
+block content  
+  div.container-fluid
+    .container
+      .row(style="min-height:500px;").align-items-center
+        .col-md-4.offset-md-4
+          h3 Usuario en sesión
+            br
+            small #{usuario}
+          br
+          br
+          div.form-group
+            button#enviar(type="button", nombre="Cerrar sesión", onclick="cerrarSesion(this)").btn.btn-info Cerrar sesión
+          div.form-group
+            a(href="/")
+              span.oi.oi-arrow-circle-left
+              span(style="margin-left:5px;") Inicio

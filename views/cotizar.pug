@@ -1,0 +1,444 @@
+//- Vista: /views/web/formcotiz.pug
+    Autor: Pablo Coronel
+    Fecha: 11.02.2018
+    Seguridad: Recaptcha Invisible 
+    Propósito: dar acceso al sistema Xplora.
+    Metodo de restuesta: /jsloquear
+
+
+extends templates/layout_b.pug
+
+block content  
+  .container-fluid
+    .bloque_medio#inicio
+      .container
+        h1.display-5 COTIZADOR SEGURO DE AUTO
+        h4.display-5 Ingresá los datos de tu vehículo para cotizar tu seguro
+        hr
+        form#formcotiz(action="/jscotizar", method="post")
+          .row
+            .col-md-6
+
+              .form-group
+                input(type="text",name="patente", aria-describedby="patenteHelp", placeholder="Patente(Opcional)").form-control#patente
+
+              .form-group
+                .form-check.form-check-inline
+                  input(type="radio",name="usado").form-check-input#radio1
+                  label.form-check-label(for="radio1") 0KM
+                .form-check.form-check-inline
+                  input(type="radio",name="usado", checked="true").form-check-input#radio2
+                  label.form-check-label(for="radio2") NO
+
+
+
+              .form-group
+                select.form-control#marcas
+                  option(selected="selected", value="") [Seleccione una marca]
+                  each value in marcas
+                    option(value=value._id)=value.nombre
+
+              .form-group
+                select.form-control#anio
+                  option(value="") AÑO
+
+              .form-group
+                select.form-control#modelos
+                  option(selected="selected", value="") [Seleccione un modelo]
+
+              .form-group
+                select.form-control#version
+                  option(selected="selected", value="") [Seleccione un versión]
+
+
+            .col-md-6
+
+
+              .form-group
+                input(type="text",name="cp", placeholder="Código Postal", required="true").form-control#cp
+
+              .form-group
+                select.form-control#localidad
+                  option(selected="selected", value="") [Seleccione una localidad]
+
+              .form-group
+                input(type="text",name="nombre", placeholder="Nombre").form-control#nombre
+
+              .form-group
+                input(type="email",name="email", placeholder="Email", required="true").form-control#email
+
+              div.form-group
+                button#enviar(type="submit", nombre="cotizar").btn.btn-success.btn-lg.btn-block COTIZAR
+
+
+
+  .bloque_alto#success(style="display:none;")
+    .container.text-center(style="min-height:500px;")
+      h1.display-3
+        span.oi.oi-check(style="color:green;")
+        span Gracias!
+      h3 Uno de nuestros operadores se pondrá en contacto con usted.
+      a.btn.btn-success.btn-lg(href="/") Inicio
+    script.
+
+      // ---------------------------- Declaración de variables --------------------------------------------------------
+      var IDgRecaptchaIResponse = "#g-recaptcha-response"; // ID nodo que contiene response grecaptcha.
+      var gRecaptchaIResponse = null; // KEY response grecaptcha.
+      var gRecaptchaIExec = false;  // Bandera de ejecución de recaptcha.
+      var esperaToken = null;  // bucle monitor de KEY recibida.
+      var action = null; // script action del formulario.
+      var enviar = null;  // boton submit del formulario..
+      // var data = {}; // datos que seran pasado a la solicitud.
+      // ---------------------------- Declaración de variables --------------------------------------------------------
+        var target = '#{target}';
+        var id = '#{id}';
+        var fecha = new Date();
+        var ano = fecha.getFullYear();
+
+      // ---------------------------- Definición de eventos --------------------------------------------------------
+      $(document).ready(function(){
+
+
+        $( "input#radio1" ).checkboxradio();
+        $( "input#radio2" ).checkboxradio();
+
+
+        $('#patente').focus();
+
+
+        action = $("#formcotiz").attr("action"); // script action del formulario.
+        enviar = $("#formcotiz").find("button:submit").first();  // boton submit del formulario..
+        $('#formcotiz').submit(function(e){e.preventDefault() && e.preventDefault;
+
+            var marca = false,modelo = false,version = false,localidad = false;
+            if($("#marcas").val()==""){$("#marcas").css({borderColor:"red"});alert("Seleccione una marca");}else
+            {
+              var marca = true;
+              if($("#modelos").val()=="")
+              {
+                $("#modelos").css({borderColor:"red"});
+                alert("Seleccione un modelo");
+              }else
+              { 
+                var modelo = true;
+                if($("#version").val()==""){$("#version").css({borderColor:"red"});alert("Seleccione una version");}else
+                {
+                  var version = true;
+                  if($("#localidad").val()==""){$("#localidad").css({borderColor:"red"});alert("Seleccione una localidad");}else
+                  {
+                    var localidad = true;
+                  }
+                }
+              }
+            }
+
+            if(marca && modelo && version && localidad)
+            {
+
+              if($(IDgRecaptchaIResponse).val()!="")
+               {
+                  enviarForm(); // realizar solicitud
+               }else
+               {
+
+                  if(!gRecaptchaIExec)
+                  {
+                     gRecaptchaIExec = true;
+                     iniciarEspera();
+                     grecaptcha.execute();
+                  }else
+                  {
+                     grecaptcha.execute();
+                  }
+               }         
+            }
+
+       
+             
+        return false; });
+
+
+
+
+
+        var limit = 40;
+        var content = "";
+        for(i=0;i<limit;i++)
+        {
+          content+="<option value='"+(ano-i)+"'> "+(ano-i)+"</option>";
+        }
+        $("#anio").html(content);
+
+        $('#marcas').change(function()
+        {
+
+            var marca = $(this).val();
+            getModelos(marca);
+
+        });
+
+
+        $('#modelos').change(function()
+        {
+
+            var modelo = $(this).val();
+            getVersion(modelo);
+
+        });
+
+        $('#cp').change(function()
+        {
+
+            var cp = $(this).val();
+            getLocalidades(cp);
+
+        });
+
+
+
+
+        $("#radio1").change(function()
+        {
+
+            if($("input[name='usado']").is(':checked'))
+            {
+              $("#anio").val(ano);
+
+              $("#anio").attr("disabled",true);
+
+
+            }
+
+        });
+
+        $("#radio2").change(function()
+        {
+
+            if($("input[name='usado']").is(':checked'))
+            {
+              $("#anio").removeAttr("disabled");
+            }
+
+        });
+
+        $("#marcas, #modelos, #version, #localidad").focusout(function()
+        {
+            $(this).css({borderColor:"#ced4da"});
+        });
+
+
+
+      });// .ready()
+      // ---------------------------- Definición de eventos --------------------------------------------------------
+
+      // ---------------------------- Funciones especiales --------------------------------------------------------
+
+
+
+     function getModelos(data){
+         
+
+         $.ajax({
+          dataType: "json",method: "POST",url:  "/jsgetmodelos", data: {hash:'#{data.hash}',marca:data},
+          success:function(data)
+          {
+
+            if(data.estado)
+            {
+
+                if(data.datos.length==0)
+                {
+                    var content = "<option value=''>[Seleccione un modelo]</option>";
+                }else
+                {
+                    var content = "";
+
+                    for(var i in data.datos)
+                    {
+                      content += "<option value='"+data.datos[i]._id+"'>"+ data.datos[i].nombre +"</option>";
+
+                    }
+                }
+                $("#modelos").html(content)
+
+            }else
+            {
+
+              console.log("Sin modelos");
+            }
+
+             // return data.estado;
+          },
+          fail:function(jqXHR, textStatus, errorThrown){
+
+          }
+
+
+        });
+      }      
+
+     function getVersion(data){
+         
+
+         $.ajax({
+          dataType: "json",method: "POST",url:  "/jsgetversion", data: {hash:'#{data.hash}',modelo:data},
+          success:function(data)
+          {
+
+            if(data.estado)
+            {
+                if(data.datos.length==0)
+                {
+                    var content = "<option value=''>[Seleccione una versión]</option>";
+                }else
+                {
+                    var content = "";
+                  for(var i in data.datos)
+                  {
+                    content += "<option value='"+data.datos[i]._id+"'>"+ data.datos[i].nombre +"</option>";
+
+                  }
+                }
+                $("#version").html(content)
+
+
+          }else
+          {
+              console.log("Sin versiones");
+
+          }
+
+             // return data.estado;
+          },
+          fail:function(jqXHR, textStatus, errorThrown){
+
+          }
+
+
+        });
+      }        
+
+
+      function getLocalidades(data){
+         
+
+         $.ajax({
+          dataType: "json",method: "POST",url:  "/jsgetlocale", data: {hash:'#{data.hash}', cp:data},
+          success:function(data)
+          {
+
+            if(data.estado)
+            {
+                if(data.datos.length==0)
+                {
+                    var content = "<option value=''>[Seleccione una localidad]</option>";
+                }else
+                {
+                  var content = "";
+                  for(var i in data.datos)
+                  {
+                    content += "<option value='"+data.datos[i]._id+"'>"+ data.datos[i].nombre +"</option>";
+                  }
+                }
+                $("#localidad").html(content)
+
+          }else
+          {
+
+            console.log("Sin localidad");
+          }
+
+             // return data.estado;
+          },
+          fail:function(jqXHR, textStatus, errorThrown){
+
+          }
+
+
+        });
+      }         
+
+      var gData = function()
+      {
+        var data={};
+        data.captcha = gRecaptchaIResponse;
+        data.patente = $("#patente").val();
+        data.anio = $("#anio").val();
+        data.marca = $("#marcas").val();
+        data.modelo = $("#modelos").val();
+        data.version = $("#version").val();
+        data.cp = $("#cp").val();
+        data.localidad = $("#localidad").val();
+        data.nombre = $("#nombre").val();
+        data.email = $("#email").val();
+        console.log(data)
+        return data;
+      }
+
+      var resetRecapt = function()
+      {
+         gRecaptchaIResponse = "";grecaptcha.reset(); $(IDgRecaptchaIResponse).val("");gRecaptchaIExec=false;
+      }
+
+      var stopEspera = function(){gRecaptchaIResponse = null;clearInterval(esperaToken); /* Fin de la espera de la respuesta de recaptcha*/ }
+
+      var iniciarEspera= function(){
+              esperaToken = setInterval(function()
+                  { // Esperando la respuesta de recaptcha
+
+                    if($(IDgRecaptchaIResponse).val()!="")
+                    {
+                      clearInterval(esperaToken); // Fin a la espera de la respuesta de recaptcha
+                      gRecaptchaIResponse = $(IDgRecaptchaIResponse).val();
+
+                      enviarForm(); // realizar solicitud
+                    }
+                  },100);
+          }
+
+      function enviarForm(data){
+         
+         $("#enviar").html(LOADINGHTMLBTN).attr("disabled",true);
+
+         $.ajax({
+          dataType: "json",method: "POST",url:  action, data: {hash:'#{data.hash}',datos:gData()},
+          success:function(data)
+          {
+
+                if(data.estado)
+                  {
+
+                   resetRecapt()
+                    $("#inicio").fadeOut(300, function()
+                    {
+                        $("#success").fadeIn(300, function()
+                        {
+
+                        });
+
+                    });
+
+
+                  }else
+                  {
+
+                   $("#enviar").html( "COTIZAR" ).removeAttr("disabled");
+                   mensaje(data.mensaje,"warning");
+                   resetRecapt();
+
+                  }
+
+             // return data.estado;
+          },
+          fail:function(jqXHR, textStatus, errorThrown){
+
+             $(enviar).html( $(enviar).attr( "nombre" ) ).removeAttr("disabled");
+
+             mensaje(textStatus,"danger");
+             resetRecapt();
+          }
+
+
+        });
+      }      
+      // ---------------------------- Funciones especiales -------------------------------------------------------

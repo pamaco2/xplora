@@ -1,0 +1,22 @@
+extends ../emails/layout.pug
+
+block content  
+    h1 Recuperación de datos de acceso
+    hr
+    br
+    p Estimado usuario de #{data.site_nombre}:
+    p 
+      span Recibimos una solicitud para recuperar el acceso a su cuenta asociada a 
+        strong #{data.usuario}
+      span . Sus datos de acceso se detallan a continuación:
+    p
+       span Contraseña:
+       span
+         strong #{data.pass}
+    br
+    br
+    br
+    p Si no solicitaste este email, es posible que otra persona esté intentando acceder a tu cuenta. No reenvíes ni proporciones este email a otra persona.
+    p Atentamente.
+    p El equipo de cuentas de  #{data.site_nombre}
+    br

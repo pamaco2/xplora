@@ -1,0 +1,72 @@
+extends ../layout.pug
+
+block content 
+  .container-fluid
+    .container
+      div(style="margin:5% auto;")
+        h2(style="text-align:center;") Confirmación de recuperación de acceso
+        br
+        br
+        div(style="text-align:center;")
+          h1#loading
+        div#result1(style="text-align:center;")
+          h1
+            span#resultadoico
+        div(style="text-align:center;")
+          h4#resultadotext
+
+
+  script.
+
+
+
+
+     // ---------------------------- Declaración de variables --------------------------------------------------------
+      var usuario = '#{data.usuario}';
+     	var codigo = '#{data.code}';
+     // ---------------------------- Declaración de variables --------------------------------------------------------
+
+
+     // ---------------------------- Definición de eventos --------------------------------------------------------
+      $(document).ready(function(){
+      		$('#loading').html(LOADINGHTMLBTNoscuro);
+          confirmarecup({usuario:usuario, codigo:codigo});
+
+
+
+      }); // .ready()
+     // ---------------------------- Definición de eventos --------------------------------------------------------
+     
+
+     // ---------------------------- Definición de functiones --------------------------------------------------------
+      function confirmarecup(data){
+         
+         $.ajax({
+          dataType: "json",method: "POST",url:  '/confirmarecup', data: {hash:'#{data.hash}', datos:data},
+          success:function(data)
+          {
+
+                $("#loading").html( "");
+                if(data.estado)
+                  {
+
+                   $("#resultadoico").addClass( "oi" ).addClass( "oi-circle-check" ).css({color:"green"});
+                   $("#resultadotext").html( "La recuperación se realizó con éxito" );
+                   mensaje(data.mensaje,"success", true);
+                  }else
+                  {
+                   $("#resultadoico").addClass( "oi" ).addClass( "oi-circle-x" ).css({color:"red"});
+                   $("#resultadotext").html(data.mensaje );
+
+                   mensaje(data.mensaje,"warning");
+
+                  }
+
+             // return data.estado;
+          },
+          fail:function(jqXHR, textStatus, errorThrown){mensaje(textStatus,"danger");}
+
+
+        });
+      }
+      // ---------------------------- Definición de functiones --------------------------------------------------------

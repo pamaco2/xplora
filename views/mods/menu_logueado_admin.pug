@@ -1,0 +1,25 @@
+if usuario!==undefined
+   li.nav-item.dropdown
+     a.nav-link.dropdown-toggle( href="#", id="navbarDropdownMenuLogued", data-toggle="dropdown", aria-haspopup="true", aria-expanded="false")
+       = usuario
+     .dropdown-menu(style="left:auto !important;right:-10px !important",aria-labelledby="navbarDropdownMenuLogued")
+        if privilegio>=4
+          a.dropdown-item(href="/") Sitio Web
+          .dropdown-divider
+        if privilegio>=3
+          a.dropdown-item(href="/productos") Productos
+          a.dropdown-item(href="/pedidos") Pedidos
+          .dropdown-divider
+        if privilegio>=2
+          .dropdown-divider
+        if privilegio>=1
+          a.dropdown-item(href="/editarme") Mi perfil
+          a.dropdown-item(href="/mispedidos") Mis pedidos
+          .dropdown-divider
+          a.dropdown-item(href="#", onclick="cerrarSesion(this)", nombre="Cerrar Sesión") Cerrar Sesión 
+else
+  ul.navbar-nav.my-2.my-lg-0
+    li.nav-item
+      a.nav-link(href="/signup") Signup
+    li.nav-item
+      a.nav-link(href="/login") Login

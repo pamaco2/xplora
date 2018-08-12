@@ -1,0 +1,15 @@
+extends ../emails/layout.pug
+
+block content  
+    h1 Solicitud de cotización
+    hr
+    br
+    p 
+      span Recibimos un pedido de cotización de #{data.nombre}
+    p
+       span Email:
+       span
+         strong #{data.email}
+    br
+    br
+    br

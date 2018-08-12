@@ -1,0 +1,25 @@
+html
+  head
+    title #{data.site_nombre}
+    meta(charset="utf-8")
+
+    style.
+    
+body
+   div(style="width:100%;padding:5px;")
+      div(style="width:600px;margin:auto 0;")
+         div(style="border-bottom:1px solid #EEE;padding:5px 0;margin:10px 0 20px;")
+           a(href= ""+data.base_url) 
+             img(src= ""+data.base_url+'/images/logo.png', style="width:150px;margin:5px auto;" alt="Logo")
+
+         block content  
+         hr
+         footer(style="text-align:center;border-top:1px solid #EEE;padding:5px 0;margin:20px 0 10px;font-size:16px;")
+           p
+             span= data.site_nombre 
+             br
+             span= data.site_email
+             br
+             span= data.site_telefono
+             br
+             span= data.site_direccion

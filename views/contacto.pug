@@ -1,0 +1,157 @@
+//- Vista: /views/web/formlogin.pug
+    Autor: Pablo Coronel
+    Fecha: 11.02.2018
+    Tipo: Formulario Ascincrono
+    Seguridad: Recaptcha Invisible 
+    Propósito: dar acceso al sistema Xplora.
+    Metodo de restuesta: /jsloquear
+
+
+extends templates/layout_b.pug
+
+block content  
+  .container
+    div.align-items-center(style="padding:8% 0;")
+      h2 Contacto
+      h4 Escríbanos y nos podremos en contacto con ustéd a la brevedad.      
+      hr
+      .row.justify-content-center
+        .col-4
+          form#formlogin(action="/contacto", method="post")
+            div.form-group
+              label Nombre:
+              input(type="text",name="nombre",required="true").form-control#nombre
+            div.form-group
+              label Email:
+              input(type="email",name="email",required="true").form-control#email
+            div.form-group
+              label Mensaje:
+              textarea(name="email",required="true").form-control#mensaje
+            div.form-group
+              button#enviar(type="submit", nombre="Enviar").btn.btn-info Enviar
+        .col-1
+        .col-4
+          p.text-left
+            span
+              strong Email:
+            span=data.site_email
+          p.text-left
+            span
+              strong Soporte:
+            span=data.site_soporte
+
+    script.
+
+      // ---------------------------- Declaración de variables --------------------------------------------------------
+      var IDgRecaptchaIResponse = "#g-recaptcha-response"; // ID nodo que contiene response grecaptcha.
+      var gRecaptchaIResponse = null; // KEY response grecaptcha.
+      var gRecaptchaIExec = false;  // Bandera de ejecución de recaptcha.
+      var esperaToken = null;  // bucle monitor de KEY recibida.
+      var action = null; // script action del formulario.
+      var enviar = null;  // boton submit del formulario..
+      // var data = {}; // datos que seran pasado a la solicitud.
+      // ---------------------------- Declaración de variables --------------------------------------------------------
+
+
+      // ---------------------------- Definición de eventos --------------------------------------------------------
+      $(document).ready(function(){
+
+        action = $("#formlogin").attr("action"); // script action del formulario.
+        enviar = $("#formlogin").find("button:submit").first();  // boton submit del formulario..
+        $('#formlogin').submit(function(e){e.preventDefault() && e.preventDefault;
+
+            if($(IDgRecaptchaIResponse).val()!="")
+             {
+                enviarForm(); // realizar solicitud
+             }else
+             {
+
+                if(!gRecaptchaIExec)
+                {
+                   gRecaptchaIExec = true;
+                   iniciarEspera();
+                   grecaptcha.execute();
+                }else
+                {
+                   grecaptcha.execute();
+                }
+             }                
+
+        return false; });
+
+      });// .ready()
+      // ---------------------------- Definición de eventos --------------------------------------------------------
+
+      // ---------------------------- Funciones especiales --------------------------------------------------------
+
+
+      var gData = function()
+      {
+        var data={};
+        data.captcha = gRecaptchaIResponse;
+        data.nombre = $("#nombre").val();
+        data.email = $("#email").val();        
+        data.mensaje = $("#mensaje").val();        
+        return data;
+      }
+      var resetRecapt = function()
+      {
+         gRecaptchaIResponse = "";grecaptcha.reset(); $(IDgRecaptchaIResponse).val("");gRecaptchaIExec=false;
+      }
+
+      var stopEspera = function(){gRecaptchaIResponse = null;clearInterval(esperaToken); /* Fin de la espera de la respuesta de recaptcha*/ }
+
+      var iniciarEspera= function(){
+              esperaToken = setInterval(function()
+                  { // Esperando la respuesta de recaptcha
+
+                    if($(IDgRecaptchaIResponse).val()!="")
+                    {
+                      clearInterval(esperaToken); // Fin a la espera de la respuesta de recaptcha
+                      gRecaptchaIResponse = $(IDgRecaptchaIResponse).val();
+
+                      enviarForm(); // realizar solicitud
+                    }
+                  },100);
+          }
+
+      function enviarForm(data){
+         
+         $(enviar).html(LOADINGHTMLBTN).attr("disabled",true);
+
+         $.ajax({
+          dataType: "json",method: "POST",url:  action, data: {hash:'#{data.hash}',datos:gData()},
+          success:function(data)
+          {
+
+                if(data.estado)
+                  {
+
+                   $(enviar).html( $(enviar).attr( "nombre" ) );
+                   mensaje(data.mensaje,"success", true);
+                   resetRecapt()
+
+
+                  }else
+                  {
+
+                   $(enviar).html( $(enviar).attr( "nombre" ) ).removeAttr("disabled");
+                   mensaje(data.mensaje,"warning");
+                   resetRecapt();
+
+                  }
+
+             // return data.estado;
+          },
+          fail:function(jqXHR, textStatus, errorThrown){
+
+             $(enviar).html( $(enviar).attr( "nombre" ) ).removeAttr("disabled");
+
+             mensaje(textStatus,"danger");
+             resetRecapt();
+          }
+
+
+        });
+      }
+      // ---------------------------- Funciones especiales -------------------------------------------------------

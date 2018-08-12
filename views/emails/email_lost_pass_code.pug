@@ -1,0 +1,22 @@
+extends ../emails/layout.pug
+
+block content  
+    h1 Recuperación de datos de acceso
+    hr
+    br
+    p Estimado usuario de #{data.site_nombre}:
+    p 
+      span Recibimos una solicitud para recuperar el acceso a su cuenta asociada a 
+        strong #{data.usuario}
+      span . Haga click en el siguiente enlace(Confirmar) para confirmar la recuperación de sus datos de acceso.
+    br
+    div(style="text-align:center;")
+      a(href= data.base_url+"/confirmarecup?token="+data.token+"&usuario="+data.usuario, style="color:#FFF;font-weight:bolder;padding:10px;border:2px solid #999;border-radius:5px;background:#17a2b8;")
+        span Confirmar  
+    br
+    br
+    br
+    p Si no solicitaste este email, es posible que otra persona esté intentando acceder a tu cuenta. No reenvíes ni proporciones este email a otra persona.
+    p Atentamente.
+    p El equipo de cuentas de  #{data.site_nombre}
+    br

@@ -1,0 +1,24 @@
+extends ../emails/layout.pug
+
+block content  
+    h1 Datos de acceso
+    hr
+    br
+    p Estimado usuario de #{data.site_nombre}:
+    p 
+      span Le hacemos llegar sus datos de acceso.
+        
+      span . Su nombre de usuario es:
+    p
+       span
+         strong #{data.usuario}
+    br
+    p Si no recuerda su contraseña, haga click en el siguiente enlace para recuperar su contraseña:
+          a(href= data.base_url+"/lostpass", style="color:#FFF;font-weight:bolder;padding:10px;border:2px solid #999;border-radius:5px;background:#17a2b8;") Recuperar contraseña
+
+    br
+    br
+    p No reenvíes ni proporciones este email a otra persona. 
+    p Atentamente.
+    p El equipo de cuentas de  #{data.site_nombre}
+    br

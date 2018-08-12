@@ -1,0 +1,340 @@
+//- Vista: /views/usuarios/index.pug
+    Autor: Pablo Coronel
+    Fecha: 26.02.2018
+    Tipo: Puerta de entrada administrador
+    Seguridad: 
+    Propósito: 
+    Metodo de restuesta: /
+
+extends ../templates/admin_layout.pug
+
+block content 
+  div(style="padding-top:20px;padding-button:20px;")
+  div.container-fluid
+      div.row
+        div.col-md-3
+          h6 Menú
+          ul.list-group
+           if sesion.privilegio>=1
+              a.list-group-item.list-group-item-action(href="/administrador")
+                span.oi.oi-arrow-left
+                span  Cerrar
+
+           if sesion.privilegio>=2
+
+           if sesion.privilegio>=3
+              button.list-group-item.list-group-item-action(type="button",data-toggle="modal", data-target="#nuevoitem")#nuevoitembtn
+                span.oi.oi-plus 
+                span  Nuevo usuario
+           if sesion.privilegio>=4
+           if sesion.privilegio>=5
+      
+        div.col-md-9
+          h5 Usuarios
+          div
+            span 
+              a(href="#")#clear
+                small Limpiar filtros
+
+          div
+            div.input-group.mb-3
+              input.form-control(placeholder="Tipee el texto a buscar", aria-label="Tipee el texto a buscar", aria-describedby="basic-addon2")#textoBuscar
+              div.input-group-append
+                button.btn.btn-outline-secondary(type="button")#buscar Buscar
+
+          div(style="min-height:500px;")#lista
+          hr
+          div#paginacion
+
+
+  .modal.fade( tabindex="-1", role="dialog")#nuevoitem
+    .modal-dialog(role="document")
+      .modal-content
+        .modal-header
+          h5.modal-title Crear usuario
+          button.close(type="button", data-dismiss="modal", aria-label="Close")
+            span(aria-hidden="true") &times;
+        .modal-body
+          p Ingrese los datos de la nueva cuenta.
+          p Los datos seran enviados al usuario para que pueda confirmar la operación.
+
+          form(action="/", method="post")#formnuevousuario
+            .row
+              .col-md-12
+                .input-group.input-group-sm.mb-3
+                  .input-group-prepend
+                    .input-group-text#inputGroup-sizing-sm Usuario
+                  input.form-control(type="text",aria-label="Small", aria-describedby="inputGroup-sizing-sm", placeholder="Ejemplo: miemail@hotmail.com", required="true")#usuarionuevo
+              .col-md-6
+                .input-group.input-group-sm.mb-3
+                  .input-group-prepend
+                    .input-group-text#inputGroup-sizing-sm Nombre
+                  input.form-control(type="text",aria-label="Small", aria-describedby="inputGroup-sizing-sm" , required="true")#nombrenuevo
+              .col-md-6
+                .input-group.input-group-sm.mb-3
+                  .input-group-prepend
+                    .input-group-text#inputGroup-sizing-sm Apellido
+                  input.form-control(type="text",aria-label="Small", aria-describedby="inputGroup-sizing-sm" , required="true")#apellidonuevo                  
+              .col-md-6
+                .input-group.input-group-sm.mb-3
+                  .input-group-prepend
+                    .input-group-text#inputGroup-sizing-sm Privilegio
+                  input.form-control(type="text",aria-label="Small", aria-describedby="inputGroup-sizing-sm", disabled="true", value="Registrado" )#privilegio
+              
+              .col-md-12
+                button.btn.btn-primary.btn-block(type="submit")#crearusuario Crear Usuario
+
+        .modal-footer
+
+
+  script.
+    
+    var PRV = null;
+    var COOK = {}
+    var PAGHORIZONTE = 2;
+
+    var COOK = JSON.parse(leerCookie('listar_usuarios'));
+    if(COOK===null)
+    {
+      COOK = {
+              texto:"",
+              tags:"",
+              pagina:0,
+              paginas:1,
+              limit:20
+      }
+
+      escribirCookie('listar_usuarios',JSON.stringify(COOK));
+      console.log("Cookie generada.");
+    }
+
+
+    $(document).ready(function(){
+       recuperarLista();
+
+
+       if(COOK.texto!=""){
+          $('#textoBuscar').val(COOK.texto);
+       }
+
+
+       $('#clear').click(function(e){ e.preventDefault && e.preventDefault();
+
+        eliminarCookie('listar_usuarios');
+        location.reload();
+
+      return false;});
+
+
+       $('#buscar').click(function(e){ e.preventDefault && e.preventDefault();
+          var text = $('#textoBuscar').val();
+          console.log(text);
+          COOK.texto = text;
+          COOK.pagina = 0;
+          escribirCookie('listar_usuarios',JSON.stringify(COOK));
+          recuperarLista();
+
+      return false;});
+
+       $('#paginacion').on('click','a.page-link',function(e){ e.preventDefault && e.preventDefault();
+
+          var pag = $(this).attr('pagina');
+         
+          COOK.pagina = parseInt(pag);
+          escribirCookie('listar_usuarios',JSON.stringify(COOK));
+          recuperarLista();
+         // var pag = $(this);
+
+        console.log(pag);
+       return false;});
+
+
+       $("#formnuevousuario").submit(function(e){e.preventDefault() && e.preventDefault;
+         $("#crearusuario").html(LOADINGHTMLBTN).attr("disabled",true);
+
+          var data={};
+          data.nombre = $("#nombrenuevo").val();
+          data.apellido = $("#apellidonuevo").val();
+          data.usuario = $("#usuarionuevo").val();
+
+          enviarForm(data);
+       return false;});
+    });
+
+
+
+      function recuperarLista(){
+         
+
+
+         $.ajax({
+          dataType: "json",method: "POST",url:  '/usuarios/jslistausuarios', data: {hash:'#{data.hash}'},
+          success:function(data)
+          {
+            console.log(data)
+                if(data.estado)
+                  {
+                    PRV = data.privilegios;
+                    var content = "";
+                    content += "<table class='table table-hover'>";
+                      content += "<tr>";
+                      content += "<td>"+"Apellido y nombre"+"</td>";
+                      content += "<td>"+"Usuario"+"</td>";
+                      content += "<td>"+"Email"+"</td>";
+                      content += "<td>"+"Privilegio"+"</td>";
+                      content += "<td>"+"Estado"+"</td>";
+                      content += "</tr>";
+                    for(i=0;i<data.datos.length;i++)
+                    {
+                      if(data.datos[i].estado==0)
+                      {
+                        content += "<tr class='bg-warning'>";
+
+                      }else
+                      {
+                        content += "<tr>";
+                      
+                      }
+                      content += "<td><a href='/usuarios/item?id="+data.datos[i]._id+"'>"+data.datos[i].apellido +" "+ data.datos[i].nombre+"</a></td>";
+                      content += "<td>"+data.datos[i].usuario+"</td>";
+                      content += "<td>"+data.datos[i].email+"</td>";
+                      for(j=0;j<data.privilegios.length;j++)
+                      {
+                        if(data.privilegios[j].rango==data.datos[i].privilegio)
+                        {
+                          if(data.privilegios[j].alias!=""){
+                            content += "<td>"+data.privilegios[j].alias+"</td>";
+                          }else
+                          {
+                            content += "<td>"+data.privilegios[j].nombre+"</td>";
+                          }
+                        }
+                      }
+                      content += "<td>";
+                      if(data.datos[i].estado==0){
+                        content += "Desactivado";
+                      }else{
+                        content += "Activado";
+                      }
+                      
+                      content += "</td>";
+                      content += "</tr>";
+                    }
+                    content += "</table>";
+                    $("#lista").html( content );
+
+                     paginacion(parseInt(data.paginacion), parseInt(data.pagina));
+                     console.log(data.privilegios)
+                  }else
+                  {
+
+                    $("#lista").html( "Sin datos" );
+
+                  }
+                  console.log(PRV)
+             // return data.estado;
+          },
+          fail:function(jqXHR, textStatus, errorThrown){
+
+             console.log(errorThrown);
+          }
+
+
+        });
+      }    
+
+
+      function paginacion(pgns,pgn)
+      {
+        var content = '<ul class="pagination">';
+
+          var disable = "";
+          if(pgn <= PAGHORIZONTE){
+
+            content += '<li  class="page-item disabled"><a class="page-link" pagina="0" id="previo" href="#" aria-label="Previous"><span aria-hidden="true">&laquo;</span><span class="sr-only">Previous</span>'+ "</a></li>";
+
+           }else
+           {
+            content += '<li  class="page-item"><a class="page-link" pagina="0" id="previo" href="#" aria-label="Previous"><span aria-hidden="true">&laquo;</span><span class="sr-only">Previous</span>'+ "</a></li>";
+
+           }
+
+
+          for(i=0;i<pgns;i++)
+          {
+
+
+              if(i >= (pgn-PAGHORIZONTE) && i <= (pgn+PAGHORIZONTE)){
+                  if(pgn==i)
+                  {
+                    content += '<li  class="page-item disabled" ><a class="page-link" pagina="'+i+'" href="#">' + (i+1) + "</a></li>";
+                  
+                  }else
+                  {
+                    content += '<li  class="page-item" ><a class="page-link" pagina="'+i+'" href="#">' + (i+1) + "</a></li>";
+
+                  }
+
+              }
+
+          }
+
+
+
+          if(pgn > (pgns-PAGHORIZONTE-2)){
+            
+            content += '<li  class="page-item disabled"><a class="page-link" pagina="'+(pgns-1)+'" id="proximo" href="#" aria-label="Previous"><span aria-hidden="true">&raquo;</span><span class="sr-only">Next</span>'+ "</a></li>";
+          }else{
+            content += '<li  class="page-item"><a class="page-link" pagina="'+(pgns-1)+'" id="proximo" href="#" aria-label="Previous"><span aria-hidden="true">&raquo;</span><span class="sr-only">Next</span>'+ "</a></li>";
+          
+          }
+  
+          content += "</ul>";
+          $('#paginacion').html(content);
+
+
+      }
+
+
+
+      function enviarForm(data){
+         
+
+
+         $.ajax({
+          dataType: "json",method: "POST",url:  "/crearusuario", data: {hash:'#{data.hash}',datos:data},
+          success:function(data)
+          {
+
+                if(data.estado)
+                  {
+
+                    mensaje(data.mensaje,"success", true);
+                    setTimeout(function(){
+
+                      $("nuevoitembtn").focus();
+                      $("#nuevoitem").modal("hide");
+                      location.reload();
+                    },3000);
+
+                  }else
+                  {
+
+                    mensaje(data.mensaje,"warning");
+
+                  }
+                   $("#crearusuario").html("Crear Usuario" ).removeAttr("disabled");
+
+             // return data.estado;
+          },
+          fail:function(jqXHR, textStatus, errorThrown){
+
+             $(enviar).html( $(enviar).attr( "nombre" ) ).removeAttr("disabled");
+
+             mensaje(textStatus,"danger");
+             resetRecapt();
+          }
+
+
+        });
+      }

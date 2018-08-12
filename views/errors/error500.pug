@@ -1,0 +1,18 @@
+//- Vista: /views/errors/error500.pug
+    Autor: Pablo Coronel
+    Fecha: 11.02.2018
+    Tipo: Vista de error
+    Seguridad: N/A 
+    Propósito: N/A 
+    Metodo de restuesta: N/A 
+
+extends ../errors/layout.pug
+
+block content  
+  .row.align-items-center
+    .col-md-4.offset-md-4(style="text-align:center;")
+      h1
+        span.oi.oi-warning
+      h3 Error 500
+      p Hemos tenido problemas con su respuesta
+      a(href="/") Inicio

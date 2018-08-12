@@ -1,0 +1,22 @@
+//- Vista: /views/web/signup_simple.pug
+    Autor: Pablo Coronel
+    Fecha: 11.02.2018
+    Tipo: Formulario Ascincrono
+    Seguridad: Recaptcha Invisible 
+    Propósito: dar registro de usuario al sistema Xplora.
+    Metodo de restuesta: /signup_confirmacion [POST]
+
+extends ../../templates/layout.pug
+
+block content  
+  div.container-fluid
+    .container
+      .row(style="min-height:500px;").align-items-center
+        .col-md-6.offset-md-3
+          h3 Error de registro
+          p Problemas con el token.
+                 
+          div.form-group
+            a(href="/login")
+              span.oi.oi-circle-x 
+              span  Cerrar

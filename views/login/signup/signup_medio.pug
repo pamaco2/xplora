@@ -1,0 +1,217 @@
+//- Vista: /views/web/signup_medio.pug
+    Autor: Pablo Coronel
+    Fecha: 11.02.2018
+    Tipo: Formulario Ascincrono
+    Seguridad: Recaptcha Invisible 
+    Propósito: dar registro de usuario al sistema Xplora.
+    Metodo de restuesta: /signup [POST]
+
+extends ../../templates/layout_b.pug
+
+block content  
+  div.container-fluid
+    div(style="margin-top:5%;margin-bottom:5%;")
+      .container
+        .row(style="min-height:500px;").align-items-center
+          .col-md-6.offset-md-3
+            h3 Registrar nuevo usuario
+            p
+              small * Campos requeridos
+            form#form(action="/signup", method="post")
+              div.form-group
+                label 
+                  strong * Usuario:
+                input(type="email",name="usuario",required="true", placeholder="Ej.:miemail@gmail.com").form-control#usuario
+              div.row
+                div.col-md-6
+                  div.form-group
+                    label
+                      strong * Nombre:
+                    input(type="text",name="nombre",required="true").form-control#nombre
+                div.col-md-6
+                  div.form-group
+                    label 
+                      strong * Apellido:
+                    input(type="text",name="apellido",required="true").form-control#apellido
+              hr
+              div.row
+                div.col-md-6
+                  div.form-group
+                    label Teléfono:
+                    input(type="text",name="telefono").form-control#telefono
+                div.col-md-6
+                  div.form-group
+                    label Código Postal:
+                    input(type="text",name="cpostal").form-control#cpostal
+              div.row
+                div.col-md-12
+                  div.form-group
+                    label Dirección:
+                    input(type="text",name="direccion").form-control#direccion
+               
+                div.col-md-12
+                  div.form-group
+                    label Localidad:
+                    input(type="text",name="localidad").form-control#localidad
+                
+                div.col-md-6
+                  div.form-group
+                    label Pais:
+                    select.form-control#pais
+
+                div.col-md-6
+                  div.form-group
+                    label Provincia:
+                    select.form-control#provincia
+              
+              div.form-group
+                button#enviar(type="submit", nombre="Registrar").btn.btn-info Registrar
+              div.form-group
+                a(href="/")
+                  span.oi.oi-arrow-circle-left 
+                  span(style="margin-left:5px;") Inicio
+
+    script.
+      // ---------------------------- Declaración de variables --------------------------------------------------------
+      var IDgRecaptchaIResponse = "#g-recaptcha-response"; // ID nodo que contiene response grecaptcha.
+      var gRecaptchaIResponse = null; // KEY response grecaptcha.
+      var gRecaptchaIExec = false;  // Bandera de ejecución de recaptcha.
+      var esperaToken = null;  // bucle monitor de KEY recibida.
+      var action = null; // script action del formulario.
+      var enviar = null;  // boton submit del formulario..
+      // var data = {}; // datos que seran pasado a la solicitud.
+      // ---------------------------- Declaración de variables --------------------------------------------------------
+
+
+      // ---------------------------- Definición de eventos --------------------------------------------------------
+      $(document).ready(function(){
+
+
+            $("#pais").load("/getpaises",{hash:'#{data.hash}'},function(responseTxt, statusTxt, xhr)
+            {
+                console.log($("#pais").val());
+                var pais = $("#pais").val();
+                $("#provincia").load("/getprovincias",{hash:'#{data.hash}', codepais:pais },function(responseTxt, statusTxt, xhr)
+                {});
+            });
+
+            $("#pais").change(function()
+            {
+                var pais = $("#pais").val();
+                console.log(pais);
+                $("#provincia").load("/getprovincias",{hash:'#{data.hash}', codepais:pais },function(responseTxt, statusTxt, xhr){});
+
+            });
+
+
+        action = $("#form").attr("action"); // script action del formulario.
+        enviar = $("#form").find("button:submit").first();  // boton submit del formulario..
+        $('#form').submit(function(e){e.preventDefault() && e.preventDefault;
+
+            if($(IDgRecaptchaIResponse).val()!="")
+             {
+                enviarForm(); // realizar solicitud
+             }else
+             {
+
+                if(!gRecaptchaIExec)
+                {
+                   gRecaptchaIExec = true;
+                   iniciarEspera();
+                   grecaptcha.execute();
+                }else
+                {
+                   grecaptcha.execute();
+                }
+             }                
+
+        return false; });
+
+      });// .ready()
+      // ---------------------------- Definición de eventos --------------------------------------------------------
+
+      // ---------------------------- Funciones especiales --------------------------------------------------------
+
+
+      var gData = function()
+      {
+        var data={};
+        data.captcha = gRecaptchaIResponse;
+        data.nombre = $("#nombre").val();
+        data.apellido = $("#apellido").val();
+        data.usuario = $("#usuario").val();
+        data.envio = {
+            telefono:$("#telefono").val(),
+            direccion:$("#direccion").val(),
+            cpostal:$("#cpostal").val(),
+            localidad:$("#localidad").val(),
+            provincia:$("#provincia").val(),
+            pais:$("#pais").val()
+        };
+
+
+
+        return data;
+      }
+      var resetRecapt = function()
+      {
+         gRecaptchaIResponse = "";grecaptcha.reset(); $(IDgRecaptchaIResponse).val("");gRecaptchaIExec=false;
+      }
+
+      var stopEspera = function(){gRecaptchaIResponse = null;clearInterval(esperaToken); /* Fin de la espera de la respuesta de recaptcha*/ }
+
+      var iniciarEspera= function(){
+              esperaToken = setInterval(function()
+                  { // Esperando la respuesta de recaptcha
+
+                    if($(IDgRecaptchaIResponse).val()!="")
+                    {
+                      clearInterval(esperaToken); // Fin a la espera de la respuesta de recaptcha
+                      gRecaptchaIResponse = $(IDgRecaptchaIResponse).val();
+
+                      enviarForm(); // realizar solicitud
+                    }
+                  },100);
+          }
+
+      function enviarForm(data){
+         
+         $(enviar).html(LOADINGHTMLBTN).attr("disabled",true);
+
+         $.ajax({
+          dataType: "json",method: "POST",url:  action, data: {hash:'#{data.hash}',datos:gData()},
+          success:function(data)
+          {
+
+                if(data.estado)
+                  {
+
+                   $(enviar).html( $(enviar).attr( "nombre" ) );
+                   mensaje(data.mensaje,"success", true);
+                   resetRecapt()
+
+                   //setTimeout(function(){ window.location="/"; },2000);
+
+                  }else
+                  {
+
+                   $(enviar).html( $(enviar).attr( "nombre" ) ).removeAttr("disabled");
+                   mensaje(data.mensaje,"warning");
+                   resetRecapt();
+
+                  }
+
+             // return data.estado;
+          },
+          fail:function(jqXHR, textStatus, errorThrown){
+
+             $(enviar).html( $(enviar).attr( "nombre" ) ).removeAttr("disabled");
+
+             mensaje(textStatus,"danger");
+             resetRecapt();
+          }
+
+
+        });
+      }
+      // ---------------------------- Funciones especiales -------------------------------------------------------

@@ -1,0 +1,19 @@
+extends ../emails/layout.pug
+
+block content  
+    h1 Contacto desde sitio web
+    hr
+    br
+    p 
+      span Recibimos un mensaje de 
+        strong #{data.envio.nombre}
+    p
+       span Email:
+       span
+         strong #{data.envio.email}
+    p
+       span Mensaje:
+    div #{data.envio.mensaje}
+    br
+    br
+    br

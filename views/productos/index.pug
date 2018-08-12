@@ -1,0 +1,598 @@
+//- Vista: /views/usuarios/index.pug
+    Autor: Pablo Coronel
+    Fecha: 26.02.2018
+    Tipo: Puerta de entrada administrador
+    Seguridad: 
+    Propósito: 
+    Metodo de restuesta: /
+
+extends ../templates/admin_layout.pug
+
+block content 
+  div(style="padding-top:20px;padding-button:20px;")
+  div.container-fluid
+      div.row
+        div.col-md-3
+          h6 Menú
+          ul.list-group
+           if sesion.privilegio>=1
+              a.list-group-item.list-group-item-action(href="/administrador")
+                span.oi.oi-arrow-left
+                span  Cerrar
+
+           if sesion.privilegio>=2
+
+           if sesion.privilegio>=3
+              button.list-group-item.list-group-item-action(type="button",data-toggle="modal", data-target="#nuevoitem")#nuevoitembtn
+                span.oi.oi-plus 
+                span  Nuevo producto
+           if sesion.privilegio>=4
+           if sesion.privilegio>=5
+      
+        div.col-md-9
+          h5 Productos
+          .row
+            .col-md-3
+              .opciones-colectivas(style="display:block;")
+                nav.nav
+                  a.nav-link(href="#")#eliminaritems
+                    span.oi.oi-trash 
+                  a.nav-link(href="#")#actualizarprecio
+                    span.oi.oi-dollar 
+
+
+            .col-md-9
+              div.input-group.mb-3
+                input.form-control(placeholder="Nombre del producto", aria-label="Nombre del producto", aria-describedby="basic-addon2")#textoBuscar
+                div.input-group-append
+                  button.btn.btn-outline-primary(type="button")#buscar Buscar
+                  a.btn.btn-outline-secondary(href="#")#clear Limpiar filtros
+
+          div(style="min-height:500px;")#lista
+          hr
+          div#paginacion
+
+
+  .modal.fade( tabindex="-1", role="dialog")#nuevoitem
+    .modal-dialog(role="document")
+      .modal-content
+        .modal-header
+          h5.modal-title
+            span.oi.oi-document
+            span Agregar producto
+          button.close(type="button", data-dismiss="modal", aria-label="Close")
+            span(aria-hidden="true") &times;
+        .modal-body
+          p Ingrese el nombre del producto
+
+          form(action="/productos/jscrearitem", method="post")#formnuevoproducto
+            .row
+              .col-md-12
+                .input-group.input-group-sm.mb-3
+                  .input-group-prepend
+                    .input-group-text#inputGroup-sizing-sm Nombre
+                  input.form-control(type="text",aria-label="Small", aria-describedby="inputGroup-sizing-sm", required="true")#nombrenuevo
+
+              .col-md-12
+                button.btn.btn-primary.btn-block(type="submit")#crearitem Crear
+
+        .modal-footer
+
+  .modal.fade( tabindex="-1", role="dialog")#eliminando
+    .modal-dialog(role="document")
+      .modal-content
+        .modal-header
+          h5.modal-title
+            span.oi.oi-document
+            span Eliminando items
+            span.badge.badge-danger#eliminandoCant 
+          button.close(type="button", data-dismiss="modal", aria-label="Close")
+            span(aria-hidden="true") &times;
+        .modal-body
+          p Está a punto de eliminar los siguientes productos. Esta acción no se puede deshacer
+          div(style="max-height:300px;overflow-y:scroll;")
+            table.table.table-sm
+
+        .modal-footer
+          button.btn.btn-danger(type="submit")#eliminaritemsproc Proceder
+          button.btn.btn-default(type="button", data-dismiss="modal", aria-label="Close")#canceleliminaritemsproc Cerrar
+
+
+  .modal.fade( tabindex="-1", role="dialog")#duplicacion
+    .modal-dialog(role="document")
+      .modal-content
+        .modal-header
+          h5.modal-title
+            span.oi.oi-document
+            span Duplicar
+          button.close(type="button", data-dismiss="modal", aria-label="Close")
+            span(aria-hidden="true") &times;
+        .modal-body
+          p Está a punto de duplicar el item 
+            strong
+              span#duplicacionitem
+
+          p Está seguro?
+
+        .modal-footer
+          input(type="hidden", value="")#duplicacionalias_item
+          input(type="hidden", value="")#duplicacionnombre_item
+          button.btn.btn-success(type="submit")#duplicacionproc Proceder
+          button.btn.btn-default(type="button", data-dismiss="modal", aria-label="Close") Cancelar
+
+  script.
+    
+    var PRV = null;
+    var ALIASCONTADOR = 0;
+    var ALIASORIGINAL = "";
+    var COOK = {};
+    var SELECT = [];
+    var POOLXHR = 0;
+    var PAGHORIZONTE = 2;
+
+    var COOK = JSON.parse(leerCookie('listar_productos'));
+    if(COOK===null)
+    {
+      COOK = {
+              texto:"",
+              tags:"",
+              pagina:0,
+              paginas:1,
+              limit:20
+      }
+
+      escribirCookie('listar_productos',JSON.stringify(COOK));
+      console.log("Cookie generada.");
+    }
+
+
+    $(document).ready(function(){
+       recuperarLista();
+
+
+       if(COOK.texto!=""){
+          $('#textoBuscar').val(COOK.texto);
+       }
+
+
+       $('#clear').click(function(e){ e.preventDefault && e.preventDefault();
+
+        eliminarCookie('listar_productos');
+        location.reload();
+
+      return false;});
+
+       $('#lista').on("click", ".duplicar", function(e){ e.preventDefault && e.preventDefault();
+
+        var alias_item = $(this).attr("alias");
+        var nombre_item = $(this).attr("nombre");
+        $("#duplicacionitem").html(nombre_item);
+        $("#duplicacionalias_item").val(alias_item);
+        $("#duplicacionnombre_item").val(nombre_item);
+        $("#duplicacion").modal("show");
+
+      return false;});
+
+      $('#duplicacionproc').click(function(e){ e.preventDefault && e.preventDefault();
+        $(this).html(LOADINGHTMLBTN).attr("disabled",true);              
+
+
+          var dat={};
+          dat.nombre = $("#duplicacionnombre_item").val();
+          dat.alias = $("#duplicacionalias_item").val()+"_copia";
+          dat.origin = $("#duplicacionalias_item").val();
+
+          if(dat.alias!="")
+          {
+            enviarFormDup(dat);
+          }
+
+
+      return false;});
+
+       $('#eliminaritemsproc').click(function(e){ e.preventDefault && e.preventDefault();
+          $(this).html(LOADINGHTMLBTN).attr("disabled",true);
+          if(SELECT.length>0)
+          {
+            for(i=0;i<SELECT.length;i++)
+            {
+              eliminarItems(SELECT[i]);
+            }
+          }
+
+          $('#eliminando').modal("hide")
+          $('#eliminaritemsproc').html("Proceder").attr("disabled",false);
+
+
+
+       return false;});
+
+       $('#buscar').click(function(e){ e.preventDefault && e.preventDefault();
+          var text = $('#textoBuscar').val();
+          console.log(text);
+          COOK.texto = text;
+          COOK.pagina = 0;
+          escribirCookie('listar_productos',JSON.stringify(COOK));
+          recuperarLista();
+
+      return false;});
+
+       $('#paginacion').on('click','a.page-link',function(e){ e.preventDefault && e.preventDefault();
+
+          var pag = $(this).attr('pagina');
+         
+          COOK.pagina = parseInt(pag);
+          escribirCookie('listar_productos',JSON.stringify(COOK));
+          recuperarLista();
+         // var pag = $(this);
+
+        console.log(pag);
+       return false;});
+
+       $('#eliminaritems').click(function(e){ e.preventDefault && e.preventDefault();
+          SELECT = [];
+          var items = [];
+          var content = "";
+          $("input[name=items]:checked").each(function()
+          {
+
+            items.push({
+              _id:$(this).attr("id_item"),
+              nombre:$(this).attr("nombre"),
+              alias:$(this).attr("alias")
+            });
+          });
+
+          if(items.length>0)
+          {
+
+            for(i=0;i<items.length;i++)
+            {
+               content += "<tr>";
+               content += "<td>"+items[i]._id+"</td>";
+               content += "<td>"+items[i].nombre+"</td>";
+               content += "</tr>";
+           
+               SELECT.push(items[i]);
+            }
+            
+            $("#eliminando").find("table").html(content);
+            $("#eliminandoCant").html(items.length);
+            $("#eliminando").modal('show');
+          }
+         
+
+       return false;});
+
+
+
+       $("#formnuevoproducto").submit(function(e){e.preventDefault() && e.preventDefault;
+         $("#crearitem").html(LOADINGHTMLBTN).attr("disabled",true);
+
+          var dat={};
+          dat.nombre = $("#nombrenuevo").val();
+          dat.alias = normalize(dat.nombre);
+
+          enviarForm(dat);
+
+       return false;});
+    });
+
+
+
+      function recuperarLista(){
+         
+
+
+         $.ajax({
+          dataType: "json",method: "POST",url:  '/productos/jslistaitems', data: {hash:'#{data.hash}'},
+          success:function(data)
+          {
+                if(data.estado)
+                  {
+                    PRV = data.privilegios;
+                    var content = "";
+                    content += "<table class='table table-hover'>";
+                      content += "<tr>";
+                      content += "<td>"+"#"+"</td>";
+                      content += "<td>"+"img"+"</td>";
+                      content += "<td>"+"Nombre"+"</td>";
+                      content += "<td>"+"Precio"+"</td>";
+                      content += "<td>"+"Stock"+"</td>";
+                      content += "<td>"+"Alias"+"</td>";
+                      content += "<td>"+""+"</td>";
+                      content += "</tr>";
+                    for(i=0;i<data.datos.length;i++)
+                    {
+                      if(data.datos[i].estado==false)
+                      {
+                        content += "<tr class='table-warning'>";
+
+                      }else
+                      {
+                        content += "<tr>";
+                      
+                      }
+                      content += "<td>";
+                      content += "<input name='items' id_item='"+data.datos[i]._id+"' nombre='"+data.datos[i].nombre+"' alias='"+data.datos[i].alias+"' type='checkbox' style='width:20px;border:2px solid #333 !important;'>";
+                      content += "</td>";
+                      content += "<td>";
+                      if(data.datos[i].imagen!="")
+                      {
+                        content += "<img src='#{data.base_url}/productos/"+data.datos[i].alias+"/img/"+data.datos[i].imagen +"' class='product-list-img' style='width:30px;height:30px;border-radius:15px;border:3px solid #FFF;margin:2px 5px;overflow:hidden;box-shadow:0 0 2px rgba(0,0,0,0.5);'>";
+
+                      }else
+                      {
+                        content += "<img src='#{data.base_url}/sin_imagen.png' class='product-list-img' style='width:30px;height:30px;border-radius:15px;border:3px solid #FFF;margin:2px 5px;overflow:hidden;box-shadow:0 0 2px rgba(0,0,0,0.5);'>";
+
+                      }
+                      content += "</td>";
+                      content += "<td>";
+                        content += "<a href='/productos/item?id="+data.datos[i]._id+"'>";
+                        content += data.datos[i].nombre ;
+                        content +=  " <small>[" + data.datos[i].alias +"]</small>";
+                        content += "</a>";
+
+                      content += "</td>";
+                      content += "<td>$ "+data.datos[i].precio +"</td>";
+                      content += "<td>"+data.datos[i].stock +"</td>";
+                      content += "<td>";
+                      content +=  "<span>" + data.datos[i].alias +"</span><br>";
+                      content +=  "<small><small>" + data.datos[i]._id +"</small></small>";
+    
+                      content += "</td>";
+                      content += "<td>";
+                      content +=  "<button class='btn btn-outline-info duplicar' item_id='"+data.datos[i]._id+"' alias='"+data.datos[i].alias+"' nombre='"+data.datos[i].nombre+"' type='button' >";
+                      content +=  "Duplicar";
+                      content +=  "</button>";
+    
+                      content += "</td>";
+                      content += "</tr>";
+                    }
+                    content += "</table>";
+                    $("#lista").html( content );
+
+                     paginacion(parseInt(data.paginacion), parseInt(data.pagina));
+                  }else
+                  {
+
+                    $("#lista").html( "Sin datos" );
+
+                  }
+          },
+          fail:function(jqXHR, textStatus, errorThrown){
+
+             console.log(errorThrown);
+          }
+
+
+        });
+      }    
+
+
+      function paginacion(pgns,pgn)
+      {
+        var content = '<ul class="pagination">';
+
+          var disable = "";
+          if(pgn <= PAGHORIZONTE){
+
+            content += '<li  class="page-item disabled"><a class="page-link" pagina="0" id="previo" href="#" aria-label="Previous"><span aria-hidden="true">&laquo;</span><span class="sr-only">Previous</span>'+ "</a></li>";
+
+           }else
+           {
+            content += '<li  class="page-item"><a class="page-link" pagina="0" id="previo" href="#" aria-label="Previous"><span aria-hidden="true">&laquo;</span><span class="sr-only">Previous</span>'+ "</a></li>";
+
+           }
+
+
+          for(i=0;i<pgns;i++)
+          {
+
+
+              if(i >= (pgn-PAGHORIZONTE) && i <= (pgn+PAGHORIZONTE)){
+                  if(pgn==i)
+                  {
+                    content += '<li  class="page-item disabled" ><a class="page-link" pagina="'+i+'" href="#">' + (i+1) + "</a></li>";
+                  
+                  }else
+                  {
+                    content += '<li  class="page-item" ><a class="page-link" pagina="'+i+'" href="#">' + (i+1) + "</a></li>";
+
+                  }
+
+              }
+
+          }
+
+
+
+          if(pgn > (pgns-PAGHORIZONTE-2)){
+            
+            content += '<li  class="page-item disabled"><a class="page-link" pagina="'+(pgns-1)+'" id="proximo" href="#" aria-label="Previous"><span aria-hidden="true">&raquo;</span><span class="sr-only">Next</span>'+ "</a></li>";
+          }else{
+            content += '<li  class="page-item"><a class="page-link" pagina="'+(pgns-1)+'" id="proximo" href="#" aria-label="Previous"><span aria-hidden="true">&raquo;</span><span class="sr-only">Next</span>'+ "</a></li>";
+          
+          }
+  
+          content += "</ul>";
+          $('#paginacion').html(content);
+
+
+      }
+
+ 
+
+      function eliminarItems(d){
+        
+
+         $.ajax({
+          dataType: "json",method: "POST",url:  "/productos/jseliminaritem", data: {hash:'#{data.hash}', datos:d},
+          success:function(result)
+          {
+
+                if(result.estado)
+                  {
+                    mensaje(result.mensaje,"success");
+
+                    $("#lista").find("input[name=items]:checked").each(function(i,o)
+                    {
+                      var atrb = $(o).attr("id_item");
+
+                      if(d._id==atrb)
+                      {
+                        $(o).parent().parent().fadeOut(200, function()
+                        {
+                          $(this).remove();
+                        })
+                      }
+
+                    });
+                  }else
+                  {
+                    mensaje("Error eliminando productos","danger", true);
+                  }
+          },
+          fail:function(jqXHR, textStatus, errorThrown){mensaje(textStatus,"danger");}
+
+
+        });
+      }
+
+      function enviarForm(par){
+         
+
+
+         $.ajax({
+          dataType: "json",method: "POST",url:  "/productos/jscrearitem", data: {hash:'#{data.hash}',datos:par},
+          success:function(result)
+          {
+
+                if(result.estado)
+                  {
+
+                    mensaje(result.mensaje,"success", true);
+                   
+
+
+
+                    setTimeout(function(){
+
+                      $("nuevoitembtn").focus();
+                      $("#nuevoitem").modal("hide");
+                      location.reload();
+                    },2000);
+
+                  }else
+                  {
+                    ALIASCONTADOR++;
+                    ALIASORIGINAL = par.alias;
+
+                    var nom = par.nombre;
+                    var al = ALIASORIGINAL+ "("+ALIASCONTADOR+")";
+                    var nuevoData = {
+                      nombre: par.nombre,
+                      alias: normalize(par.nombre)+ "("+ALIASCONTADOR+")"
+                    }
+
+                    if(ALIASCONTADOR<10)
+                    {
+                      enviarForm(nuevoData);
+                    }else
+                    {
+                      mensaje("Error creando producto","danger", true);
+                    }
+
+                  }
+                  $("#crearusuario").html("Crear Usuario" ).removeAttr("disabled");
+
+          },
+          fail:function(jqXHR, textStatus, errorThrown){
+             $(enviar).html( $(enviar).attr( "nombre" ) ).removeAttr("disabled");
+             mensaje(textStatus,"danger");
+          }
+
+
+        });
+      }
+
+
+      function enviarFormDup(par){
+        console.log(par)
+         $.ajax({
+          dataType: "json",method: "POST",url:  "/productos/jsduplicaritem", data: {hash:'#{data.hash}',datos:par},
+          success:function(result)
+          {
+
+                if(result.estado)
+                  {
+
+                    mensaje(result.mensaje,"success", true);
+                    ALIASCONTADOR=0;
+                    ALIASORIGINAL = "";
+                   
+                    setTimeout(function(){
+
+                      $("nuevoitembtn").focus();
+                      $("#nuevoitem").modal("hide");
+                      location.reload();
+                    },2000);
+
+                  }else
+                  {
+                    ALIASCONTADOR++;
+                    ALIASORIGINAL = par.alias;
+
+                    var nom = par.nombre;
+                    var al = ALIASORIGINAL+ "("+ALIASCONTADOR+")";
+                    var nuevoData = {
+                      nombre: par.nombre,
+                      alias: normalize(par.nombre)+ "("+ALIASCONTADOR+")",
+                      origin: ALIASORIGINAL
+                    }
+
+                    if(ALIASCONTADOR<10)
+                    {
+                      enviarFormDump(nuevoData);
+                    }else
+                    {
+                      mensaje("Error creando producto","danger", true);
+                    }
+
+                  }
+                  $("#crearusuario").html("CrearALIASCONTADOR" ).removeAttr("disabled");
+
+          },
+          fail:function(jqXHR, textStatus, errorThrown){
+             $(enviar).html( $(enviar).attr( "nombre" ) ).removeAttr("disabled");
+             mensaje(textStatus,"danger");
+          }
+
+
+        });
+      }
+
+
+
+      var normalize = (function() {
+        var from = "ÃÀÁÄÂÈÉËÊÌÍÏÎÒÓÖÔÙÚÜÛãàáäâèéëêìíïîòóöôùúüûÑñÇç", 
+            to   = "AAAAAEEEEIIIIOOOOUUUUaaaaaeeeeiiiioooouuuunncc",
+            mapping = {};
+       
+        for(var i = 0, j = from.length; i < j; i++ )
+            mapping[ from.charAt( i ) ] = to.charAt( i );
+       
+        return function( str ) {
+            var ret = [];
+            for( var i = 0, j = str.length; i < j; i++ ) {
+                var c = str.charAt( i );
+                if( mapping.hasOwnProperty( str.charAt( i ) ) )
+                    ret.push( mapping[ c ] );
+                else
+                    ret.push( c );
+            }      
+            //return ret.join( '' );
+          return ret.join( '' ).replace( /[^-A-Za-z0-9]+/g, '-' ).toLowerCase();
+        }
+       
+      })();      

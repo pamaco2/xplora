@@ -1,0 +1,43 @@
+extends templates/layout.pug
+
+block content  
+  .bloque_medio
+    .container
+      a.btn.btn-info(href="/catalogo") Volver
+      .row
+        .col-md-2
+        .col-md-4
+          div(style="border:1px solid #EEE;")
+            if item.imagen==""
+              img(src=data.base_url+"/sin_imagen.jpg",style="max-width:100%;")
+            else
+              img(src=data.base_url+"/productos/"+item.alias+"/img/"+item.imagen,style="max-width:100%;width:100%;")
+            
+            if item.stock==0
+              img(src="/sin_stock.png", style="position:absolute;top:15px;right:15px;width:100px;height:50px;padding:5px;")
+            if item.destacado==true
+              img(src="/destacado.png", style="position:absolute;top:15px;left:15px;width:55px;height:80px;padding:5px;width:;")              
+        .col-md-6
+          h2= item.nombre
+          h4= item.intro
+          p= item.descripcion
+
+          hr
+          .row
+            .col-md-4
+            .col-md-8
+              if item.precio>0 && item.stock>0
+                .input-group
+                  .input-group-prepend
+                    .input-group-text(style="font-size:25px;")
+                      strong $ #{item.precio}
+                  input.form-control(type="number",min="1", value="1",style="font-size:25px;text-align:right;")
+                  .input-group-append
+                        button.btn.btn-outline-secondary.additem(type="button",nombre=item.nombre, id_item=item._id, precio=item.precio) Al carro
+
+  script.
+
+    $(document).ready(function(){
+
+
+    });

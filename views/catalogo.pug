@@ -1,0 +1,36 @@
+extends templates/layout.pug
+
+block content 
+  .bloque_bajo
+
+    .container
+        h3 Catálogo
+        .row
+          each val in items
+            .col-md-4
+              .card
+                div(style="background:#666;position:relative;")
+                  if val.imagen==""
+                    img.card-img-top(src="/sin_imagen.jpg")
+                  else
+                    img.card-img-top(src="/productos/"+val.alias+"/img/"+val.imagen)
+                  if val.stock==0
+                    img(src="/sin_stock.png", style="position:absolute;top:0;right:0;width:100px;height:50px;padding:5px;")
+                  if val.destacado==true
+                    img(src="/destacado.png", style="position:absolute;top:0;left:0;width:55px;height:80px;padding:5px;")
+ 
+                .card-body
+                  h5.card-title=val.nombre
+                  p.card-text=val.intro
+                  a.btn.btn-info.btn-block.btn-sm(href="catalogo/item?al="+val.alias, style="margin-bottom:5px;") Ver mas
+                 
+                  .input-group
+                    .input-group-prepend
+                      .input-group-text(style="font-size:15px;")
+                        strong $ #{val.precio}
+                    input.form-control(type="number",min="1", value="1",style="font-size:15px;text-align:right;")
+                    .input-group-append
+                      if val.precio>0 && val.stock>0
+                        button.btn.btn-outline-secondary.additem(type="button",nombre=val.nombre,id_item=val._id, precio=val.precio) Al carro
+                      else
+                        button.btn.btn-outline-secondary.additem(type="button",disabled="true",nombre=val.nombre,id_item=val._id, precio=val.precio) Al carro

@@ -1,0 +1,25 @@
+extends ../emails/layout.pug
+
+block content  
+    h1 Registro de usuario
+    hr
+    br
+    p Estimado usuario de #{data.site_nombre}:
+    p 
+      span Hemos confirmado su cuenta exitosamente!
+      span Sus datos de acceso se detallan a continuación:
+    p
+       span Usuario:
+       span
+         strong #{data.usuario}
+    p
+       span Contraseña:
+       span
+         strong #{data.pass}
+    br
+    p Url de acceso #{data.base_url}/login
+    br
+    br
+    p Este es un mensaje generado automáticamente, por favor no lo responda.
+    p Atte. equipo de cuentas de  #{data.site_nombre}
+    br

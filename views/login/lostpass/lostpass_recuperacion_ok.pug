@@ -1,0 +1,20 @@
+//- Vista: /views/web/signup_activacion_registro_ok.pug
+    Autor: Pablo Coronel
+    Fecha: 15.05.2018
+    Descripcion: Confirmación exitosa del proceso de recuperacion de contraseña
+
+extends ../../templates/layout.pug
+
+block content  
+  div.container-fluid
+    .container
+      .row(style="min-height:500px;").align-items-center
+        .col-md-6.offset-md-3
+          h3 Activación exitosa
+          p Sus datos ha sido enviado a su correo electrónico.
+                 
+          div.form-group
+            a(href="/login")
+              span.oi.oi-circle-x 
+              span  Acceder
+

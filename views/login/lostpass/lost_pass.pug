@@ -1,0 +1,137 @@
+//- Vista: /views/web/lost_pass.pug
+    Autor: Pablo Coronel
+    Fecha: 11.02.2018
+    Tipo: Formulario Ascincrono
+    Seguridad: Recaptcha Invisible 
+    Propósito: dar soporte de recuperación de contraseña a Xplora.
+    Metodo de restuesta: /jsprerecuperar
+
+
+
+extends ../../templates/layout_b.pug
+
+block content  
+  div.container-fluid
+    .container
+      .row(style="min-height:500px;").align-items-center
+        .col-md-4.offset-md-4
+          h4 Recuperar datos de acceso
+          p
+            small Complete el formulario y le enviaremos a su bandeja de entrada un enlace para que usted pueda confirmar esta operación.
+          form#form(action="/jsprerecuperar", method="post")
+            div.form-group
+              label Email:
+              input(type="email",name="email",required="true", placeholder="Eje.: miemail@hotmail.com").form-control#email
+            div.form-group
+              
+              button#enviar(type="submit", nombre="Recuperar").btn.btn-info Recuperar
+
+            div.form-group
+              a(href="/login")
+                span.oi.oi-arrow-circle-left 
+                span(style="margin-left:5px;") Volver
+
+                
+    script.
+      // ---------------------------- Declaración de variables --------------------------------------------------------
+      var IDgRecaptchaIResponse = "#g-recaptcha-response"; // ID nodo que contiene response grecaptcha.
+      var gRecaptchaIResponse = null; // KEY response grecaptcha.
+      var gRecaptchaIExec = false;  // Bandera de ejecución de recaptcha.
+      var esperaToken = null;  // bucle monitor de KEY recibida.
+      var action = null; // script action del formulario.
+      var enviar = null;  // boton submit del formulario..
+      var data = {}; // datos que seran pasado a la solicitud.
+      // ---------------------------- Declaración de variables --------------------------------------------------------
+
+
+      // ---------------------------- Definición de eventos --------------------------------------------------------
+      $(document).ready(function(){
+        
+        action = $("#form").attr("action"); // script action del formulario.
+        enviar = $("#form").find("button:submit").first();  // boton submit del formulario..
+
+        $('#form').submit(function(e){e.preventDefault() && e.preventDefault;
+
+            if($(IDgRecaptchaIResponse).val()!="")
+              {
+                        data.captcha = gRecaptchaIResponse;
+                        data.email = $("#email").val();
+                      recuperarPass( data); // realizar solicitud
+             }else
+             {
+
+                if(!gRecaptchaIExec)
+                {
+                   gRecaptchaIExec = true;
+                   iniciarEspera();
+                   grecaptcha.execute();
+                }else
+                {
+                   grecaptcha.execute();
+                }
+             }                
+
+        return false; });
+
+
+      }); // .ready()
+      // ---------------------------- Definición de eventos --------------------------------------------------------
+
+
+      // ---------------------------- Funciones especiales --------------------------------------------------------
+      function recuperarPass(data){
+         
+         $(enviar).html(LOADINGHTMLBTN).attr("disabled",true);
+
+         $.ajax({
+          dataType: "json",method: "POST",url:  action, data: {hash:'#{data.hash}',datos:data},
+          success:function(data)
+          {
+
+                if(data.estado)
+                  {
+
+                   $(enviar).html( $(enviar).attr( "nombre" ) );
+                   mensaje(data.mensaje,"success", true);
+                  }else
+                  {
+
+                   $(enviar).html( $(enviar).attr( "nombre" ) ).removeAttr("disabled");
+                   mensaje(data.mensaje,"warning");
+                   gRecaptchaIResponse = "";grecaptcha.reset(); $(IDgRecaptchaIResponse).val("");
+
+                  }
+
+             // return data.estado;
+          },
+          fail:function(jqXHR, textStatus, errorThrown){
+
+             $(enviar).html( $(enviar).attr( "nombre" ) ).removeAttr("disabled");
+
+             mensaje(textStatus,"danger");
+             gRecaptchaIResponse = "";grecaptcha.reset(); $(IDgRecaptchaIResponse).val("");
+          }
+
+
+        });
+      }
+
+      var stopEspera= function(){gRecaptchaIResponse = null;clearInterval(esperaToken); /* Fin de la espera de la respuesta de recaptcha*/ }
+
+      var iniciarEspera= function(){
+              esperaToken = setInterval(function()
+                  { // Esperando la respuesta de recaptcha
+
+                    if($(IDgRecaptchaIResponse).val()!="")
+                    {
+                      clearInterval(esperaToken); // Fin a la espera de la respuesta de recaptcha
+                      gRecaptchaIResponse = $(IDgRecaptchaIResponse).val();
+
+                        data.captcha = gRecaptchaIResponse;
+                        data.email = $("#email").val();
+                      recuperarPass( data); // realizar solicitud
+                    }
+                  },100);
+          }
+
+      // ---------------------------- Funciones especiales --------------------------------------------------------

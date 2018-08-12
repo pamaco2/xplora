@@ -1,0 +1,24 @@
+//- Vista: /views/errors/error401.pug
+    Autor: Pablo Coronel
+    Fecha: 11.02.2018
+    Tipo: Vista de error 401
+    Seguridad: N/A 
+    Propósito: N/A 
+    Metodo de restuesta: N/A 
+
+extends ../errors/layout.pug
+
+block content  
+  .row.align-items-center
+    .col-md-4.offset-md-4(style="text-align:center;")
+      h1
+        span.oi.oi-lock-locked
+      h3 Acceso denegado
+      p Zona restringida
+      a(href="/")
+        span.oi.oi-home 
+        span  Inicio
+      br
+      a(href="/login?target="+ target )
+        span.oi.oi-key 
+        span  Login
